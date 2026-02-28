@@ -1,3 +1,6 @@
+# BeatIT — Sequence Diagram
+
+```mermaid
 sequenceDiagram
     actor Dev as Developer
     participant UI as Browser (React + Recharts)
@@ -79,3 +82,4 @@ sequenceDiagram
         Orch-->>UI: Structured delta { kind, path, lhs, rhs }
         UI->>Dev: Show improvements (green) / regressions (red)
     end
+```
