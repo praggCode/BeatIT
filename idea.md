@@ -4,11 +4,16 @@
 
 ---
 
-## The Problem
+## 1. Problem Statement
 
-Every developer tests their API with one request at a time. Nobody tests what happens when 500 users hit it simultaneously — until launch day, when it's too late.
+**Problem Title:** Developers have no lightweight, zero-setup tool to test how their API performs under concurrent load.
 
-Existing tools each have real limitations:
+**Problem Description:**
+Every developer tests their API with one request at a time. Nobody tests what happens when 500 users hit it simultaneously — until launch day, when it's too late. Load testing is either skipped entirely or done with heavy enterprise tools that take hours to configure.
+
+**Target Users:** Backend developers, full-stack developers, and DevOps engineers who need to validate API performance before shipping.
+
+**Existing Gaps:**
 
 | Tool | Limitation |
 |------|-----------|
@@ -17,302 +22,62 @@ Existing tools each have real limitations:
 | **Locust** | Requires Python scripting, no built-in visual dashboard |
 | **Postman Load Testing** | Cloud-dependent, rate-limited, requires paid plan for meaningful scale |
 
-**The common gap:** None of them let you paste a URL and get results in under a minute without setup. There's no lightweight, browser-based tool a developer can open, configure in seconds, and get professional-grade results immediately.
+None of them let you paste a URL and get results in under a minute without setup.
 
 ---
 
-## The Solution
+## 2. Problem Understanding & Approach
 
-A web-based API load testing and performance profiling tool that lets developers simulate concurrent traffic, visualize real-time metrics, and generate structured reports — with **zero configuration overhead**.
+**Root Cause Analysis:**
+Load testing has a high barrier to entry. Existing tools require environment setup (Java, Python, scripting), have no real-time visual feedback, and are built for DevOps specialists — not the average developer shipping a feature.
 
-**One URL. One click. Full performance picture.**
-
-- 100% free to use, host, and deploy
-- No accounts. No cloud dependency. Self-hosted on any machine.
-- Every feature is powered by a well-known, battle-tested npm module
+**Solution Strategy:**
+Build a browser-based tool where every technical feature is delegated to a well-known npm module. Zero hand-rolled algorithms. Every judge question about internals is answered with a module name. The tool works out of the box with a single URL input.
 
 ---
 
-## Module Map — What Powers What
+## 3. Proposed Solution
 
-| Feature | npm Module | Why |
-|---------|-----------|-----|
-| HTTP load generation | `undici` | Fastest Node.js HTTP client, built into Node 18+, connection pooling built-in |
-| WebSocket server (live metrics) | `ws` | Lightest production-grade WebSocket library for Node.js |
-| Percentile calculation | `hdr-histogram-js` | O(1) HDR histogram — same as Elastic APM and New Relic |
-| Worker thread orchestration | `piscina` | Production worker thread pool with built-in back-pressure |
-| Rate limiting / token bucket | `limiter` | Token bucket algorithm, zero dependencies |
-| Frontend charts | `recharts` | React-native charting, composable, zero config |
-| Frontend framework | `vite` + `react` | Instant dev server, fast builds |
-| AI diagnostics | `@google/generative-ai` | Official Gemini SDK — free tier, no credit card |
-| PDF report generation | `md-to-pdf` | Markdown → PDF in 3 lines, zero system deps |
-| Run diff / metric delta | `deep-diff` | Structured object diffing with path-level change detection |
-| SLA alerting | `eventemitter3` | High-performance event emitter for threshold breach events |
-| CLI / config | `commander` | Standard Node.js CLI argument parsing |
+**Solution Overview:**
+A web-based API load testing and performance profiling tool that lets developers simulate concurrent traffic, visualize real-time metrics, and generate structured reports — with zero configuration overhead.
 
-> Every answer to "how does X work?" is a module name. No hand-rolled algorithms to defend.
+**Core Idea:** One URL. One click. Full performance picture.
+- 100% free, self-hosted, no accounts, no cloud dependency
+- Every feature powered by a battle-tested npm module
+- Results in under 90 seconds
+
+**Key Features:**
+1. Real-Time Metrics Dashboard (p50/p95/p99, throughput, error rate)
+2. Latency Heatmap (time vs latency buckets, Canvas API)
+3. Three Load Strategies — Instant Spike, Gradual Ramp, Step Function
+4. Bottleneck Detection Engine (automatic signal-based analysis)
+5. HDR Histogram for O(1) percentile calculation
+6. Worker Thread Pool with back-pressure control
+7. Token Bucket Rate Limiter
+8. Adaptive Saturation Detection (auto-finds breaking point)
+9. AI-Powered Diagnostic Engine (Gemini 2.5 Flash)
+10. PDF Report Generation (one-click download)
+11. Comparative Run Diffing (before/after optimization)
+12. SLA Threshold Enforcement with Live Alerts
 
 ---
 
-## Core Features
+## 4. System Architecture
 
-### 1. Real-Time Metrics Dashboard
-**Module: `ws` + `recharts`**
+**High-Level Flow:**
 
-Metrics stream live to the browser as the test runs — no polling, no refresh.
-
-```js
-const { WebSocketServer } = require('ws');
-const wss = new WebSocketServer({ port: 8080 });
-wss.clients.forEach(client => client.send(JSON.stringify(metrics)));
+```
+Developer (Browser) → React Frontend → Express Backend → Worker Threads → Target API
+                             ↑                  ↓
+                        WebSocket (ws)    Metric Aggregator
+                                               ↓
+                                        Gemini AI + PDF Report
 ```
 
-Live data streamed every 500ms:
-- **p50 / p95 / p99 latency** — reported by `hdr-histogram-js`
-- **Throughput** — requests successfully handled per second
-- **Error rate** — percentage of failed or timeout responses
-- **Active concurrent users** — live count throughout the test
+**Architecture Description:**
+The frontend (React + Vite) connects to the Express server via WebSocket. When a test starts, the orchestrator initializes a piscina worker thread pool. Each worker gets its own undici connection pool and fires HTTP requests to the target API. Latency values are recorded in an HDR histogram (O(1)). Every 500ms, aggregated metrics are broadcast over WebSocket to the live dashboard. After the test, metrics are sent to Gemini 2.5 Flash for AI diagnosis and converted to a PDF report via md-to-pdf.
 
-> p99 = the worst 1% of your users' experience. Average hides this — percentiles don't. This is how Netflix, Google, and Amazon measure API health.
-
----
-
-### 2. Latency Heatmap
-**Module: `recharts` (ScatterChart) or plain Canvas API**
-
-A 2D grid rendered in the browser:
-- **X-axis:** time elapsed during the test
-- **Y-axis:** latency buckets (0–50ms, 50–100ms, 100–250ms, etc.)
-- **Color intensity:** number of requests landing in each bucket at each moment
-
-Reveals patterns invisible to percentile numbers alone — "every 30 seconds there's a latency spike" points to a GC pause or scheduled database job. This is the Grafana/Datadog view senior engineers immediately recognize.
-
----
-
-### 3. HTTP Load Generation
-**Module: `undici`**
-
-`undici` is Node.js's fastest built-in HTTP client — used internally by Node 18+ itself. It supports connection pooling, keep-alive, and concurrent dispatching without the overhead of `axios` or `node-fetch`.
-
-```js
-const { Pool } = require('undici');
-const pool = new Pool(targetUrl, { connections: 50 });
-await pool.request({ method: 'POST', path: '/api/login', body: payload });
-```
-
-Each worker thread gets its own `undici` Pool — requests stay isolated per thread, measurements stay accurate.
-
----
-
-### 4. Three Load Strategies
-**Module: `piscina` (worker pool) + custom ramp scheduler**
-
-**Instant Spike** — All virtual users fire simultaneously at second zero. Tests how the API handles a sudden traffic burst (viral post, flash sale). Finds the absolute breaking point fast.
-
-**Gradual Ramp** — Starts at 10% of target users, linearly adds more until full concurrency at the halfway mark, then holds. Reveals the exact concurrency level where degradation begins.
-
-**Step Function** — Hold at 25% → 50% → 75% → 100%, 60 seconds per step. How Netflix and Amazon do capacity planning. Each step provides a stable measurement window; graphs show clean stair-step patterns with visible latency shifts at each level.
-
-```js
-// Step function scheduler
-for (const step of [0.25, 0.5, 0.75, 1.0]) {
-  await pool.run({ concurrency: Math.floor(targetUsers * step) });
-  await sleep(60_000);
-}
-```
-
----
-
-### 5. Bottleneck Detection Engine
-**Module: `eventemitter3`**
-
-Automatic post-test analysis using three proven signals. When any signal trips, `eventemitter3` fires a breach event that updates the dashboard in real time.
-
-```js
-const EventEmitter = require('eventemitter3');
-const ee = new EventEmitter();
-ee.on('breach', ({ metric, value, threshold }) => wss.broadcast(alert));
-```
-
-| Signal | What it means |
-|--------|--------------|
-| **p99 > 3× p50** | Occasional slow code path — cache miss, slow DB query, third-party call |
-| **Error rate > 2%** | Resource limit hit — connection pool, file descriptors, OOM |
-| **Throughput drops as concurrency rises** | Lock contention or thread starvation |
-
-Output: *"BeatIT detected saturation at ~80 concurrent users. Beyond this point, throughput drops and p99 spikes — consistent with connection pool exhaustion."*
-
----
-
-### 6. HDR Histogram for Latency (O(1) Percentile Calculation)
-**Module: `hdr-histogram-js`**
-
-Naive percentile implementations store every latency value in an array and call `.sort()`. At 100,000 requests that's O(n log n) every tick — the tool becomes the bottleneck.
-
-`hdr-histogram-js` maintains a fixed array of exponential buckets. Recording a latency value is one O(1) counter increment. Percentile lookup is one O(1) bucket scan. Memory footprint is constant regardless of request count.
-
-```js
-const { build } = require('hdr-histogram-js');
-const histogram = build({ lowestDiscernibleValue: 1, highestTrackableValue: 30000 });
-
-histogram.recordValue(responseTimeMs);    // O(1)
-histogram.getValueAtPercentile(99);        // O(1) — p99
-```
-
-Used in production by Elastic APM and New Relic. BSD-2-Clause licensed.
-
-> When a judge asks *"how do you calculate percentiles?"* — "O(1) HDR histogram via `hdr-histogram-js`" is a complete, defensible answer.
-
----
-
-### 7. Worker Thread Pool with Back-Pressure Control
-**Module: `piscina`**
-
-Node.js is single-threaded. `Promise.all(500 requests)` creates event-loop lag that contaminates latency measurements — you end up measuring your own tool's overhead, not the API's real performance.
-
-`piscina` is the standard production worker thread pool for Node.js — used internally by Vite and ESBuild. It distributes tasks across CPU cores and has built-in back-pressure: when the queue fills faster than workers can drain it, `piscina` automatically applies backpressure so the tool doesn't crash mid-test.
-
-```js
-const Piscina = require('piscina');
-const pool = new Piscina({ filename: './worker.js', maxThreads: 8 });
-
-const results = await Promise.all(
-  virtualUsers.map(user => pool.run({ userId: user.id, target: url }))
-);
-```
-
-Virtual user ceiling: **500 for single-machine build.** For production use beyond 500, horizontal scaling across multiple BeatIT instances is the path.
-
----
-
-### 8. Token Bucket Rate Limiter
-**Module: `limiter`**
-
-Optionally cap requests per second to simulate realistic traffic shaping — useful for testing "what if we throttle to 100 req/s, does tail latency improve?"
-
-```js
-const { RateLimiter } = require('limiter');
-const limiter = new RateLimiter({ tokensPerInterval: 100, interval: 'second' });
-
-await limiter.removeTokens(1); // blocks until a token is available
-await pool.request(req);
-```
-
-One npm install. No manual token bucket math to explain.
-
----
-
-### 9. Adaptive Saturation Detection — Auto-Find the Breaking Point
-**Module: `piscina` + `hdr-histogram-js` (feeds the probe loop)**
-
-BeatIT finds the API breaking point automatically using an additive-increase probe — the same algorithm family as TCP congestion control. No other free tool does this automatically.
-
-```js
-let concurrency = 10;
-while (true) {
-  const metrics = await runWindow({ concurrency, duration: 15_000 });
-  if (metrics.p99 > P99_THRESHOLD || metrics.errorRate > 0.02) {
-    console.log(`Saturation point: ~${concurrency} users`);
-    break;
-  }
-  concurrency += STEP_SIZE; // additive increase
-}
-```
-
-Output: *"BeatIT found your API's saturation point at ~80 concurrent users. Above this, response times become unstable."*
-
----
-
-### 10. AI-Powered Diagnostic Engine
-**Module: `@google/generative-ai` (Gemini 2.5 Flash — genuinely free)**
-
-After test completion, BeatIT sends structured JSON metrics to Gemini 2.5 Flash and receives a root-cause diagnostic report.
-
-```js
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-const result = await model.generateContent(`
-  API performance metrics: ${JSON.stringify(metrics)}
-  Diagnose the root cause and provide specific fix recommendations.
-`);
-```
-
-**Output includes:**
-- Root cause hypothesis (connection pool exhaustion, N+1 query, GC pressure, etc.)
-- Specific fix recommendations
-- Production risk assessment
-
-**Cost:** Google AI Studio free tier — no credit card, no expiry, 1,000 requests/day. API key at aistudio.google.com in 5 minutes.
-
----
-
-### 11. PDF Report Generation
-**Module: `md-to-pdf`**
-
-After every test, BeatIT builds a Markdown string from live test data and converts it to a professionally formatted PDF — one-click download, no templating engines, no HTML wrangling.
-
-```js
-const { mdToPdf } = require('md-to-pdf');
-
-const markdownReport = buildReportMarkdown(testResults); // plain string interpolation
-const pdf = await mdToPdf({ content: markdownReport });
-fs.writeFileSync('beatit-report.pdf', pdf.content);
-```
-
-**Report contains:** test config, p50/p95/p99 summary, throughput, error rate, bottleneck findings, saturation point, AI diagnostic output, SLA breach log, and comparative diff.
-
-Single `npm install md-to-pdf`. MIT licensed. No Puppeteer configuration, no system Chrome dependency to manage.
-
----
-
-### 12. Comparative Run Diffing
-**Module: `deep-diff`**
-
-Run the same test before and after an optimization. `deep-diff` produces a structured, path-level diff of every metric object — percentage deltas, regressions flagged in red, improvements in green.
-
-```js
-const { diff } = require('deep-diff');
-const changes = diff(runA.metrics, runB.metrics);
-// returns structured array: { kind, path, lhs, rhs } for every changed value
-```
-
-Mirrors how real performance engineers validate fixes — every optimization is verified by a before/after test.
-
----
-
-### 13. SLA Threshold Enforcement with Live Alerts
-**Module: `eventemitter3`**
-
-Industry-standard thresholds baked in — no configuration required:
-
-| Metric | Warning | Critical |
-|--------|---------|----------|
-| p95 latency | > 500ms | > 1000ms |
-| p99 latency | > 1000ms | > 3000ms |
-| Error rate | > 1% | > 5% |
-| Throughput drop | > 20% | > 50% |
-
-Evaluated on every WebSocket tick. Breach events fire instantly to the dashboard via `eventemitter3`. Users can override defaults — but the tool works intelligently out of the box.
-
----
-
-## Full Install
-
-```bash
-npm install undici ws piscina hdr-histogram-js limiter eventemitter3 \
-            deep-diff md-to-pdf @google/generative-ai commander
-
-# Frontend
-npm install react recharts vite
-```
-
-Everything above is free, MIT or BSD licensed, and actively maintained.
-
----
-
-## Architecture
+**Architecture Diagram:**
 
 ```
 Browser (React + Recharts + Canvas)
@@ -338,37 +103,161 @@ Express Server (Node.js)
                 └── md-to-pdf → PDF download
 ```
 
-**Deployment:** `npm install && npm start` — no Docker, no cloud account, no config files.
+---
+
+## 5. Database Design
+
+BeatIT is a **stateless tool** — there is no persistent database. All test data lives in memory during the test session. Test results are exported as PDF reports for persistence. No ER diagram required.
 
 ---
 
-## Competitive Positioning
+## 6. Model Selected
 
-| | BeatIT | k6 | JMeter | Locust | Postman |
-|---|---|---|---|---|---|
-| Browser UI | ✅ | ❌ | ✅ (desktop) | ❌ | ✅ |
-| Zero setup | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Live heatmap | ✅ | ❌ | ❌ | ❌ | ❌ |
-| HDR percentiles | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Auto saturation detection | ✅ | ❌ | ❌ | ❌ | ❌ |
-| AI diagnostics | ✅ | ❌ | ❌ | ❌ | ❌ |
-| 100% free + self-hosted | ✅ | ✅ | ✅ | ✅ | ❌ |
+**Model Name:** Gemini 2.5 Flash (`gemini-2.5-flash` via `@google/generative-ai`)
 
----
+**Selection Reasoning:** Genuinely free on Google AI Studio (1,000 requests/day, no credit card, no expiry). Fast inference suitable for post-test analysis. Official SDK available as a single npm package.
 
-## 12-Hour Build Plan
+**Evaluation Metrics:** Quality of root-cause hypothesis, specificity of fix recommendations, response latency after test completion.
 
-| Hours | Person A (Backend) | Person B (Frontend) |
-|-------|-------------------|---------------------|
-| 0–2 | Express + `ws` server + `undici` request engine | React + Vite scaffold + live metrics UI |
-| 2–4 | `piscina` worker pool + `hdr-histogram-js` | `recharts` real-time charts wired to WebSocket |
-| 4–6 | Saturation probe loop + `eventemitter3` bottleneck alerts | Latency heatmap (Canvas API) |
-| 6–8 | `@google/generative-ai` diagnostic engine + SLA alerting | Alert UI + load strategy selector |
-| 8–10 | `deep-diff` run diffing + `md-to-pdf` report export | Report view + diff display |
-| 10–12 | `limiter` rate limiter + integration + edge cases | Polish, demo flow, presentation prep |
+```js
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+const result = await model.generateContent(`
+  API performance metrics: ${JSON.stringify(metrics)}
+  Diagnose the root cause and provide specific fix recommendations.
+`);
+```
 
 ---
 
-## One-Line Pitch
+## 7. Technology Stack
 
-> *"BeatIT is a free, self-hosted API load testing tool built entirely on battle-tested npm modules — delivering adaptive saturation detection, HDR histogram latency analysis, and AI-powered diagnostics in 90 seconds, with zero configuration."*
+**Frontend:** React, Vite, Recharts, Canvas API
+
+**Backend:** Node.js, Express, ws (WebSocket), piscina, undici, hdr-histogram-js, eventemitter3, limiter, deep-diff, md-to-pdf, commander
+
+**ML/AI:** Gemini 2.5 Flash via `@google/generative-ai` (Google AI Studio free tier)
+
+**Database:** None (stateless, in-memory)
+
+**Deployment:** `npm install && npm start` — no Docker, no cloud account, no config files
+
+**Full Install:**
+```bash
+npm install undici ws piscina hdr-histogram-js limiter eventemitter3 \
+            deep-diff md-to-pdf @google/generative-ai commander
+
+# Frontend
+npm install react recharts vite
+```
+
+---
+
+## 8. API Documentation & Testing
+
+**API Endpoints:**
+
+- **Endpoint 1:** `POST /start-test` — Accepts `{ url, concurrency, strategy, duration }`, initializes piscina pool, starts load generation, opens WebSocket stream
+- **Endpoint 2:** `GET /results/:testId` — Returns final aggregated metrics object `{ p50, p95, p99, throughput, errorRate, saturationPoint }`
+- **Endpoint 3:** `POST /report` — Accepts metrics JSON, generates PDF via md-to-pdf, returns file download
+
+**WebSocket Events:**
+- `metrics` — Streamed every 500ms: `{ p50, p95, p99, throughput, errorRate, activeUsers }`
+- `breach` — Fired by eventemitter3 when SLA threshold is crossed: `{ metric, value, threshold, severity }`
+- `saturation` — Fired when additive-increase probe detects breaking point: `{ concurrency }`
+
+---
+
+## 9. Module-wise Development & Deliverables
+
+**Checkpoint 1: Research & Planning**
+- Deliverables: idea.md, sequence diagram,  module map finalized
+
+**Checkpoint 2: Backend Development**
+- Deliverables: Express server + WebSocket server (`ws`), undici HTTP load engine, piscina worker pool, HDR histogram integration
+
+**Checkpoint 3: Frontend Development**
+- Deliverables: React + Vite scaffold, recharts real-time dashboard wired to WebSocket, latency heatmap (Canvas API)
+
+**Checkpoint 4: Model Integration**
+- Deliverables: Gemini 2.5 Flash integration, structured JSON → AI diagnosis, saturation probe loop (additive-increase), eventemitter3 SLA alerting
+
+**Checkpoint 5: Reports & Diffing**
+- Deliverables: md-to-pdf report generation, deep-diff comparative run view, limiter rate-limiting integration
+
+**Checkpoint 6: Deployment**
+- Deliverables: End-to-end integration tested, demo flow rehearsed, single `npm install && npm start` verified
+
+---
+
+## 10. End-to-End Workflow
+
+1. Developer opens BeatIT in browser, enters target API URL and test config (concurrency, strategy, duration)
+2. Browser connects to WebSocket server; Developer clicks "Run Test"
+3. Express server initializes piscina worker pool (8 threads); each worker creates an undici Pool
+4. Workers fire concurrent HTTP requests; every response latency is recorded into HDR histogram (`O(1)`)
+5. Every 500ms, aggregated metrics (p50/p95/p99, throughput, error rate) are broadcast over WebSocket to the live dashboard
+6. eventemitter3 checks SLA thresholds on every tick; breach events fire live alerts to the UI
+7. Saturation probe runs additive-increase loop; detects and reports the breaking point automatically
+8. On test completion, metrics JSON is sent to Gemini 2.5 Flash for AI root-cause diagnosis
+9. md-to-pdf builds a full PDF report (metrics + AI output + SLA log); Developer downloads with one click
+10. Developer optionally loads a previous run; deep-diff shows metric deltas (improvements green, regressions red)
+
+---
+
+## 11. Demo & Video
+
+- **Live Demo Link:** *(to be added)*
+- **Demo Video Link:** *(to be added)*
+- **GitHub Repository:** https://github.com/praggCode/BeatIT
+
+---
+
+## 12. Hackathon Deliverables Summary
+
+- Fully functional browser-based load testing tool (zero setup, one URL input)
+- Real-time WebSocket dashboard with recharts + latency heatmap
+- Adaptive saturation detection via additive-increase probe
+- AI-powered PDF diagnostic report (Gemini 2.5 Flash + md-to-pdf)
+
+---
+
+## 13. Team Roles & Responsibilities
+
+| Member Name | Role | Responsibilities |
+|-------------|------|-----------------|
+| Person A, Person B | Backend Engineer | Express server, piscina worker pool, undici load engine, HDR histogram, saturation probe, Gemini AI integration, md-to-pdf report |
+| Person C | Frontend Engineer | React + Vite scaffold, recharts real-time charts, Canvas latency heatmap, SLA alert UI, load strategy selector, diff display |
+
+---
+
+## 14. Future Scope & Scalability
+
+**Short-Term:**
+- Support for authenticated endpoints (Bearer token, API key headers)
+- Exportable test config files for repeatable runs
+- Support for POST/PUT/PATCH with custom request bodies
+
+**Long-Term:**
+- Horizontal scaling beyond 500 virtual users across multiple BeatIT instances
+- Scheduled/recurring load tests with historical trend tracking
+- Customer can change their models
+
+---
+
+## 15. Known Limitations
+
+- Maximum 500 virtual users per single-machine instance (piscina ceiling on consumer hardware)
+- No persistent test history — results must be saved as PDF before closing the session
+- AI diagnosis requires a Gemini API key (free, but manual setup required at aistudio.google.com)
+- Latency heatmap is browser-rendered — very long tests (>30 min) may cause canvas memory pressure
+
+---
+
+## 16. Impact
+
+- Eliminates the "I'll test load later" excuse — any developer can run a professional load test in under 90 seconds
+- Free and self-hosted — no vendor lock-in, no paid plan required, works on a laptop
+- Brings Grafana/Datadog-grade visibility (HDR percentiles, latency heatmaps) to developers who can't afford enterprise APM tools
+- Every answer to "how does X work?" is an npm module name — fully transparent, auditable, and open source
