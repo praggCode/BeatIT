@@ -1,14 +1,20 @@
-const Piscina = require('piscina');
-const path = require('path');
-const { broadcast } = require('../ws/socket');
+const Piscina = require("piscina");
+const path = require("path");
+const { broadcast } = require("../ws/socket");
+const { emitter, checkSLA } = require("./sla");
 
 const pool = new Piscina({
-  filename: path.resolve(__dirname, '../workers/loadWorker.js'),
+  filename: path.resolve(__dirname, "../workers/loadWorker.js"),
   maxThreads: 4,
 });
 
+// Listen for SLA breaches and push alert to browser
+emitter.on("breach", (data) => {
+  broadcast({ type: "alert", data });
+});
+
 async function runTest({ target, users, duration }) {
-  broadcast({ type: 'status', data: { state: 'running' } });
+  broadcast({ type: "status", data: { state: "running" } });
 
   const endTime = Date.now() + duration;
   let totalRequests = 0;
@@ -18,35 +24,39 @@ async function runTest({ target, users, duration }) {
     const batchStart = Date.now();
 
     const results = await Promise.all(
-      Array.from({ length: users }, () =>
-        pool.run({ target, requests: 3 })  // ← lowered from 10 to 3
-      )
+      Array.from({ length: users }, () => pool.run({ target, requests: 3 })),
     );
 
-    const batchTime = (Date.now() - batchStart) / 1000; // seconds this batch took
+    // second check — stop before broadcasting if time is already up
+    if (Date.now() >= endTime) break;
+
+    const batchTime = (Date.now() - batchStart) / 1000;
 
     const batchRequests = results.reduce((a, b) => a + b.totalRequests, 0);
-    const batchErrors   = results.reduce((a, b) => a + b.errors, 0);
+    const batchErrors = results.reduce((a, b) => a + b.errors, 0);
 
     totalRequests += batchRequests;
-    totalErrors   += batchErrors;
+    totalErrors += batchErrors;
 
-    broadcast({
-      type: 'metrics',
-      data: {
-        p50:        avg(results.map(r => r.p50)),
-        p95:        avg(results.map(r => r.p95)),
-        p99:        avg(results.map(r => r.p99)),
-        throughput: Math.round(batchRequests / batchTime), // req/s for THIS batch
-        errorRate:  totalRequests > 0
-                      ? ((totalErrors / totalRequests) * 100).toFixed(2)
-                      : '0.00',
-        timeLeft:   Math.max(0, endTime - Date.now()), // ms remaining
-      }
-    });
+    const metrics = {
+      p50: avg(results.map((r) => r.p50)),
+      p95: avg(results.map((r) => r.p95)),
+      p99: avg(results.map((r) => r.p99)),
+      throughput: Math.round(batchRequests / batchTime),
+      errorRate:
+        totalRequests > 0
+          ? ((totalErrors / totalRequests) * 100).toFixed(2)
+          : "0.00",
+      timeLeft: Math.max(0, endTime - Date.now()),
+    };
+
+    // check SLA thresholds — fires breach event if anything crosses the line
+    checkSLA(metrics);
+
+    broadcast({ type: "metrics", data: metrics });
   }
 
-  broadcast({ type: 'status', data: { state: 'completed' } });
+  broadcast({ type: "status", data: { state: "completed" } });
 }
 
 function avg(arr) {
