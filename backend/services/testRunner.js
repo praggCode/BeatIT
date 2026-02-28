@@ -1,62 +1,69 @@
-const Piscina = require("piscina");
-const path = require("path");
-const { broadcast } = require("../ws/socket");
-const { emitter, checkSLA } = require("./sla");
+const Piscina = require('piscina');
+const path = require('path');
+const { broadcast } = require('../ws/socket');
+const { emitter, checkSLA } = require('./sla');
+const { diagnose } = require('./ai');
 
 const pool = new Piscina({
-  filename: path.resolve(__dirname, "../workers/loadWorker.js"),
+  filename: path.resolve(__dirname, '../workers/loadWorker.js'),
   maxThreads: 4,
 });
 
-// Listen for SLA breaches and push alert to browser
-emitter.on("breach", (data) => {
-  broadcast({ type: "alert", data });
+emitter.on('breach', (data) => {
+  broadcast({ type: 'alert', data });
 });
 
 async function runTest({ target, users, duration }) {
-  broadcast({ type: "status", data: { state: "running" } });
+  broadcast({ type: 'status', data: { state: 'running' } });
 
   const endTime = Date.now() + duration;
   let totalRequests = 0;
   let totalErrors = 0;
+  let lastMetrics = {};  // ← saves last metrics for AI
 
   while (Date.now() < endTime) {
     const batchStart = Date.now();
 
     const results = await Promise.all(
-      Array.from({ length: users }, () => pool.run({ target, requests: 3 })),
+      Array.from({ length: users }, () =>
+        pool.run({ target, requests: 3 })
+      )
     );
 
-    // second check — stop before broadcasting if time is already up
     if (Date.now() >= endTime) break;
 
     const batchTime = (Date.now() - batchStart) / 1000;
-
     const batchRequests = results.reduce((a, b) => a + b.totalRequests, 0);
-    const batchErrors = results.reduce((a, b) => a + b.errors, 0);
+    const batchErrors   = results.reduce((a, b) => a + b.errors, 0);
 
     totalRequests += batchRequests;
-    totalErrors += batchErrors;
+    totalErrors   += batchErrors;
 
     const metrics = {
-      p50: avg(results.map((r) => r.p50)),
-      p95: avg(results.map((r) => r.p95)),
-      p99: avg(results.map((r) => r.p99)),
+      p50:        avg(results.map(r => r.p50)),
+      p95:        avg(results.map(r => r.p95)),
+      p99:        avg(results.map(r => r.p99)),
       throughput: Math.round(batchRequests / batchTime),
-      errorRate:
-        totalRequests > 0
-          ? ((totalErrors / totalRequests) * 100).toFixed(2)
-          : "0.00",
-      timeLeft: Math.max(0, endTime - Date.now()),
+      errorRate:  totalRequests > 0
+                    ? ((totalErrors / totalRequests) * 100).toFixed(2)
+                    : '0.00',
+      timeLeft:   Math.max(0, endTime - Date.now()),
     };
 
-    // check SLA thresholds — fires breach event if anything crosses the line
-    checkSLA(metrics);
+    lastMetrics = metrics;  // ← update on every tick
 
-    broadcast({ type: "metrics", data: metrics });
+    checkSLA(metrics);
+    broadcast({ type: 'metrics', data: metrics });
   }
 
-  broadcast({ type: "status", data: { state: "completed" } });
+  // send to Gemini and broadcast diagnosis with completed
+  const diagnosis = await diagnose({
+    totalRequests,
+    totalErrors,
+    ...lastMetrics
+  });
+
+  broadcast({ type: 'status', data: { state: 'completed', diagnosis } });
 }
 
 function avg(arr) {

@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 // routes (uncomment as you build each one)
-// app.use('/api', testRoutes);
+app.use('/api', testRoutes);
 // app.use('/api', resultsRoutes);
 // app.use('/api', reportRoutes);
 
@@ -25,7 +25,7 @@ app.get("/", (req, res) =>
         wsPort: process.env.WS_PORT || 8080,
     })
 );
-app.use('/api', testRoutes);
+
 app.listen(port, () => {
     console.log(`HTTP server running on port ${port}`);
     console.log(`WebSocket server running on port ${process.env.WS_PORT || 8080}`);
