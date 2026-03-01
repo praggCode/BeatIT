@@ -10,12 +10,13 @@ Here are the results:
 
 ${JSON.stringify(metrics, null, 2)}
 
-Give a short diagnosis (5-6 sentences) covering:
-1. What the numbers mean in plain English
-2. What is likely causing the problem
-3. One specific fix they should try first
+Provide a diagnosis utilizing EXACTLY the following four section headers:
+ROOT CAUSE: [Explain what the numbers mean and the likely problem in 1-2 sentences]
+SEVERITY: [Critical, High, Medium, or Low]
+FIX: [One specific step to try first, actionable]
+RISK: [Any risks of leaving this unfixed or edge cases to consider]
 
-Be direct. No bullet points. Talk like you're explaining to a developer, not writing a report.
+Do not include any Markdown bolding like **ROOT CAUSE**. Just write the exact headers followed by a colon.
 `;
 
   const result = await model.generateContent(prompt);

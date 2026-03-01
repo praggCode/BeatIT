@@ -1,151 +1,79 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useWebSocket } from './hooks/useWebSocket';
 import Navbar from './components/Navbar';
-import ConfigPanel from './components/ConfigPanel';
-import TopSummary from './components/TopSummary';
-import MetricsDashboard from './components/MetricsDashboard';
-import BottomNav from './components/BottomNav';
-import Ballpit from './components/Ballpit';
-import DarkVeil from './components/DarkVeil';
-import Home from './components/Home';
-import { generateDataPoint } from './utils/mockData';
+import Sidebar from './components/Sidebar';
+import StatCards from './components/StatCards';
+import LatencyChart from './components/LatencyChart';
+import ThroughputChart from './components/ThroughputChart';
+import ErrorRateChart from './components/ErrorRateChart';
+import AlertFeed from './components/AlertFeed';
+import DiagnosisPanel from './components/DiagnosisPanel';
 
-function App() {
-    // Top Level Routing State
-    const [currentRoute, setCurrentRoute] = useState('home');
+export default function App() {
+    const ws = useWebSocket();
+    const [testDurationSecs, setTestDurationSecs] = useState(30);
+    const [slaP99, setSlaP99] = useState(500);
 
-    const [status, setStatus] = useState('idle');
+    const handleStartTest = useCallback((config) => {
+        setTestDurationSecs(config.duration / 1000);
+        setSlaP99(config.slaP99 || 500);
+        ws.startTest(config);
+    }, [ws]);
 
-    const [config, setConfig] = useState({
-        url: 'https://api.example.com/v1',
-        method: 'GET',
-        concurrency: 50,
-        duration: 300,
-    });
+    const isRunning = ws.status === 'running';
 
-    const [chartData, setChartData] = useState([]);
-    const [latestData, setLatestData] = useState(null);
-    const [elapsedTime, setElapsedTime] = useState(0);
-
-    const intervalRef = useRef(null);
-    const startTimeRef = useRef(null);
-
-    const handleConfigChange = useCallback((field, value) => {
-        setConfig(prev => ({ ...prev, [field]: value }));
-    }, []);
-
-    const stopTest = useCallback(() => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        setStatus('completed');
-    }, []);
-
-    const startTest = useCallback(() => {
-        setChartData([]);
-        setLatestData(null);
-        setElapsedTime(0);
-        setStatus('running');
-        startTimeRef.current = Date.now();
-
-        intervalRef.current = setInterval(() => {
-            const msElapsed = Date.now() - startTimeRef.current;
-            const secElapsed = msElapsed / 1000;
-
-            setElapsedTime(secElapsed);
-
-            if (secElapsed >= config.duration) {
-                stopTest();
-                return;
-            }
-
-            const newData = generateDataPoint(config.concurrency, secElapsed);
-
-            setLatestData(newData);
-            setChartData(prev => {
-                const updated = [...prev, newData];
-                if (updated.length > 60) return updated.slice(updated.length - 60);
-                return updated;
-            });
-
-        }, 1000);
-    }, [config.concurrency, config.duration, stopTest]);
-
-    useEffect(() => {
-        return () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-        };
-    }, []);
+    // Calculate progress safely based on timeLeft
+    let progressValue = 0;
+    if (isRunning && ws.latestMetrics && typeof ws.latestMetrics.timeLeft === 'number') {
+        const timeLeftSecs = ws.latestMetrics.timeLeft / 1000;
+        const elapsed = testDurationSecs - timeLeftSecs;
+        progressValue = Math.max(0, Math.min(100, (elapsed / testDurationSecs) * 100));
+    }
 
     return (
-        <div className="min-h-screen bg-theme-bg font-sans selection:bg-theme-accent/30 relative overflow-x-hidden">
+        <div className="flex flex-col h-screen w-screen overflow-hidden bg-base-100 text-base-content antialiased">
+            <Navbar connected={ws.connected} status={ws.status} />
 
-            {/* Background Layer: conditional based on route */}
-            {currentRoute === 'home' ? (
-                <div className="fixed inset-0 pointer-events-none z-0">
-                    <DarkVeil
-                        color="#000000"
-                        particleColor="#FFFFFF"
-                        particleCount={100}
-                    />
-                </div>
-            ) : (
-                <div className="fixed inset-0 pointer-events-none z-0 opacity-40">
-                    <Ballpit
-                        count={50}
-                        gravity={0.7}
-                        friction={0.8}
-                        wallBounce={0.95}
-                        followCursor={true}
-                        colors={[0x6CA2C8, 0x34D399, 0x454950]}
-                    />
-                </div>
-            )}
+            <div className="flex flex-1 overflow-hidden">
+                <Sidebar startTest={handleStartTest} status={ws.status} />
 
-            {/* Navbar floats above everything */}
-            <Navbar
-                status={status}
-                currentRoute={currentRoute}
-                onNavigate={setCurrentRoute}
-            />
+                <main className="flex-1 overflow-y-auto relative bg-base-100">
+                    {/* Progress Bar pinned to top of main area, hidden when idle/complete */}
+                    {isRunning && (
+                        <progress
+                            className="progress progress-primary w-full h-1 sticky top-0 z-50 rounded-none bg-base-300"
+                            value={progressValue}
+                            max="100"
+                        ></progress>
+                    )}
 
-            {/* Main Application Container */}
-            {currentRoute === 'home' ? (
-                <main className="w-full relative z-10 pt-20">
-                    <Home onNavigate={setCurrentRoute} />
-                </main>
-            ) : (
-                <main className="w-full relative z-10 pt-28 pb-28 2xl:max-w-[1920px] 2xl:mx-auto">
-                    <div className="px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-8 flex flex-col items-center">
-                        <div className="w-full flex-col flex gap-8">
-                            <TopSummary data={latestData} chartData={chartData} />
+                    <div className="p-6 space-y-6 max-w-[1600px] mx-auto w-full pb-12">
+                        <StatCards
+                            latestMetrics={ws.latestMetrics}
+                            metricsHistory={ws.metricsHistory}
+                            configuredSla={slaP99}
+                        />
 
-                            <MetricsDashboard latestData={latestData} chartData={chartData} />
+                        <LatencyChart
+                            metricsHistory={ws.metricsHistory}
+                            configuredSla={slaP99}
+                        />
 
-                            <ConfigPanel
-                                config={config}
-                                onChange={handleConfigChange}
-                                isRunning={status === 'running'}
-                                onStart={startTest}
-                            />
-
-                            {/* Test Controls */}
-                            <div className="flex justify-end w-full px-2 mt-4 relative z-20">
-                                <button
-                                    onClick={status === 'running' ? stopTest : startTest}
-                                    className={`px-12 py-4 rounded-xl font-bold tracking-widest text-xs uppercase transition-all shadow-xl hover:scale-[1.02] active:scale-[0.98] ${status === 'running'
-                                        ? 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30'
-                                        : 'bg-theme-accent text-[#1D2125] hover:bg-theme-accent/90 border border-theme-accent/50 shadow-[0_0_20px_rgba(108,162,200,0.4)]'
-                                        }`}
-                                >
-                                    {status === 'running' ? 'Stop Test' : 'Start Test'}
-                                </button>
+                        <div className="flex gap-6 w-full">
+                            <div className="w-[60%] shrink-0">
+                                <ThroughputChart metricsHistory={ws.metricsHistory} />
+                            </div>
+                            <div className="w-[40%] shrink-0">
+                                <ErrorRateChart metricsHistory={ws.metricsHistory} />
                             </div>
                         </div>
+
+                        <DiagnosisPanel status={ws.status} diagnosis={ws.diagnosis} />
+
+                        <AlertFeed alerts={ws.alerts} />
                     </div>
                 </main>
-            )}
-
-            {currentRoute !== 'home' && <BottomNav />}
+            </div>
         </div>
     );
 }
-
-export default App;

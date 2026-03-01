@@ -13,10 +13,15 @@ module.exports = async ({ target, requests }) => {
     try {
       const res = await pool.request({ method: 'GET', path: url.pathname || '/' });
       await res.body.text(); // drain the response body or it hangs
+
+      if (res.statusCode >= 400) {
+        throw new Error(`HTTP ${res.statusCode}`);
+      }
+
       histogram.recordValue(Date.now() - start);
     } catch (err) {
       errors++;
-      console.error(`Request ${i + 1} failed:`, err.message);
+      // console.error(`Request ${i + 1} failed:`, err.message);
     }
   }
 
