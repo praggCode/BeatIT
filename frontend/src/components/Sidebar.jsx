@@ -23,8 +23,9 @@ export default function Sidebar({ startTest, status }) {
     };
 
     return (
-        <div className="card bg-base-200 w-[300px] h-full rounded-none shrink-0 border-r border-base-300">
-            <div className="card-body p-4 flex flex-col h-full overflow-y-auto">
+        <div className="card bg-base-200 w-[300px] h-full rounded-none shrink-0 border-r border-base-300 flex flex-col">
+            {/* Scrollable form area */}
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-1">
 
                 <div className="form-control w-full">
                     <label className="label">
@@ -151,23 +152,35 @@ export default function Sidebar({ startTest, status }) {
                     <p className="text-[10px] text-base-content/40 mt-1.5 ml-0.5">{strategyDescriptions[strategy]}</p>
                 </div>
 
-                <div className="mt-auto pt-4">
-                    <button
-                        className="btn btn-primary w-full shadow-md"
-                        onClick={handleRunTest}
-                        disabled={isRunning}
-                    >
-                        {isRunning ? (
-                            <>
-                                <span className="loading loading-spinner"></span>
-                                Running...
-                            </>
-                        ) : (
-                            'Run Test'
-                        )}
-                    </button>
-                </div>
+            </div>
 
+            {/* Always-visible Run button pinned to bottom */}
+            <div className="p-4 border-t border-base-300 bg-base-200">
+                <button
+                    style={{
+                        background: isRunning ? undefined : 'linear-gradient(135deg, #22c55e, #16a34a)',
+                        boxShadow: isRunning ? undefined : '0 0 16px rgba(34,197,94,0.35)',
+                        border: 'none',
+                        color: '#fff',
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                        transition: 'box-shadow 0.2s, transform 0.1s',
+                    }}
+                    className="btn w-full disabled:opacity-60"
+                    onClick={handleRunTest}
+                    disabled={isRunning}
+                    onMouseEnter={e => { if (!isRunning) e.currentTarget.style.boxShadow = '0 0 24px rgba(34,197,94,0.55)'; }}
+                    onMouseLeave={e => { if (!isRunning) e.currentTarget.style.boxShadow = '0 0 16px rgba(34,197,94,0.35)'; }}
+                >
+                    {isRunning ? (
+                        <>
+                            <span className="loading loading-spinner"></span>
+                            Running...
+                        </>
+                    ) : (
+                        '▶  Run Test'
+                    )}
+                </button>
             </div>
         </div>
     );

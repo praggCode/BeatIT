@@ -7,6 +7,7 @@ export function useWebSocket() {
     const [latestMetrics, setLatestMetrics] = useState(null);
     const [alerts, setAlerts] = useState([]);
     const [diagnosis, setDiagnosis] = useState(null);
+    const [lastTarget, setLastTarget] = useState(null);
 
     const wsRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
@@ -116,8 +117,8 @@ export function useWebSocket() {
     const startTest = useCallback(async (config) => {
         // config expects: { target, users, duration }
         resetTest();
-        // Setting status to idle until 'running' arrives via WebSocket.
         setStatus('idle');
+        if (config?.target) setLastTarget(config.target);
 
         try {
             const response = await fetch('http://localhost:3001/api/test/start', {
@@ -142,6 +143,7 @@ export function useWebSocket() {
         latestMetrics,
         alerts,
         diagnosis,
+        lastTarget,
         startTest,
         resetTest
     };

@@ -13,6 +13,12 @@ emitter.on('breach', (data) => {
   broadcast({ type: 'alert', data });
 });
 
+let lastResult = null;
+let runHistory = [];   // always stores the last 2 completed runs
+
+function getLastResult() { return lastResult; }
+function getRunHistory() { return runHistory; }
+
 /**
  * Calculate how many virtual users should be active at a given elapsed time.
  * - spike:  All users from second 0
@@ -53,12 +59,10 @@ async function runTest({ target, users, duration, strategy = 'spike', slaP99, mi
   let latencies = [];
 
   const interval = setInterval(async () => {
-    // Stop condition
     if (Date.now() >= endTime) {
       clearInterval(interval);
       isRunning = false;
 
-      // Wait a moment for trailing requests
       await new Promise(resolve => setTimeout(resolve, 500));
 
       let diagnosis;
@@ -77,15 +81,24 @@ async function runTest({ target, users, duration, strategy = 'spike', slaP99, mi
         diagnosis = "Diagnosis analysis failed.";
       }
 
+      lastResult = {
+        target,
+        totalRequests,
+        totalErrors,
+        ...lastMetrics,
+        diagnosis,
+        timestamp: new Date().toISOString(),
+      };
+
+      runHistory = [...runHistory.slice(-1), lastResult];
+
       broadcast({ type: 'status', data: { state: 'completed', diagnosis } });
       return;
     }
 
-    // Calculate how many users should be active based on the load strategy
     const elapsed = Date.now() - startTime;
     const targetUsers = getActiveUsers(strategy, users, elapsed, duration);
 
-    // Launch worker threads asynchronously, keeping `activeWorkers` topped up to `targetUsers`
     while (activeWorkers < targetUsers && isRunning) {
       activeWorkers++;
       pool.run({ target, requests: 1 }).then((res) => {
@@ -153,4 +166,4 @@ async function runTest({ target, users, duration, strategy = 'spike', slaP99, mi
   }, 1000);
 }
 
-module.exports = { runTest };
+module.exports = { runTest, getLastResult, getRunHistory };

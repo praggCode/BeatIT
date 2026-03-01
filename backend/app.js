@@ -5,6 +5,7 @@ const express = require("express");
 // Boot WebSocket server alongside Express
 const { wss } = require("./ws/socket");
 const testRoutes = require('./routes/testRoutes');
+const resultsRoutes = require('./routes/results');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -12,9 +13,9 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// routes (uncomment as you build each one)
+// routes
 app.use('/api', testRoutes);
-// app.use('/api', resultsRoutes);
+app.use('/api', resultsRoutes);
 // app.use('/api', reportRoutes);
 
 // health check
