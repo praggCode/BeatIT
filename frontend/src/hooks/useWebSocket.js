@@ -16,7 +16,8 @@ export function useWebSocket() {
         // Prevent reconnecting if already connected OR connecting
         if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) return;
 
-        const ws = new WebSocket('ws://localhost:8080');
+        const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
+        const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
             setConnected(true);
@@ -121,7 +122,8 @@ export function useWebSocket() {
         if (config?.target) setLastTarget(config.target);
 
         try {
-            const response = await fetch('http://localhost:3001/api/test/start', {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const response = await fetch(`${apiUrl}/api/test/start`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(config)

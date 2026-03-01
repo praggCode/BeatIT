@@ -29,7 +29,8 @@ export default function App() {
 
         const fetchDiff = async () => {
             try {
-                const res = await fetch('http://localhost:3001/api/results/diff', { method: 'POST' });
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                const res = await fetch(`${apiUrl}/api/results/diff`, { method: 'POST' });
                 const json = await res.json();
 
                 if (res.ok && json.changes) {
@@ -113,7 +114,7 @@ export default function App() {
                             showComparison={showComparison}
                         />
 
-          
+
                         {isCompleted && diffData && showComparison && (
                             <div className="card bg-base-200 border-l-4 border-secondary w-full shadow-lg">
                                 <div className="card-body p-6 flex flex-col gap-4">

@@ -97,7 +97,7 @@ export default function DiagnosisPanel({ status, diagnosis, latestMetrics, targe
                                     gap: '6px',
                                 }}
                             >
-                                {showComparison ? ' Hide Comparison' : 'Compare with Previous'}
+                                {showComparison ? 'Hide Comparison' : 'Compare with Previous'}
                             </button>
                         )}
                         <button
