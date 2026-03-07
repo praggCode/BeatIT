@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
+import { Zap, TrendingUp, BarChart3, Play, Loader2 } from 'lucide-react';
 
 export default function Sidebar({ startTest, status }) {
     const [target, setTarget] = useState('');
     const [users, setUsers] = useState(10);
-    const [duration, setDuration] = useState(30000); // default 30s
+    const [duration, setDuration] = useState(30000);
     const [strategy, setStrategy] = useState('spike');
-    const [slaP99, setSlaP99] = useState(500);       // default 500ms
-    const [minThroughput, setMinThroughput] = useState(10); // default 10 req/s
-    const [maxErrorRate, setMaxErrorRate] = useState(5);    // default 5%
+    const [slaP99, setSlaP99] = useState(500);
+    const [minThroughput, setMinThroughput] = useState(10);
+    const [maxErrorRate, setMaxErrorRate] = useState(5);
 
     const isRunning = status === 'running';
 
@@ -16,169 +17,197 @@ export default function Sidebar({ startTest, status }) {
         startTest({ target, users, duration, strategy, slaP99, minThroughput, maxErrorRate });
     };
 
-    const strategyDescriptions = {
-        spike: 'All users hit at once',
-        ramp: 'Gradually ramp up users',
-        step: 'Add users in fixed steps',
-    };
+    const strategies = [
+        { key: 'spike', label: 'Spike', icon: Zap, desc: 'All users hit simultaneously' },
+        { key: 'ramp', label: 'Ramp', icon: TrendingUp, desc: 'Gradually ramp up users' },
+        { key: 'step', label: 'Step', icon: BarChart3, desc: 'Add users in fixed steps' },
+    ];
+
+    const inputClass = "w-full px-3 py-2.5 rounded-xl text-[13px] font-mono glass-input placeholder:text-white/15";
 
     return (
-        <div className="card bg-base-200 w-[300px] h-full rounded-none shrink-0 border-r border-base-300 flex flex-col">
-            {/* Scrollable form area */}
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-1">
+        <div className="h-full shrink-0 flex flex-col glass-strong relative z-10"
+            style={{
+                width: '280px',
+                borderRadius: 0,
+                borderTop: 'none',
+                borderBottom: 'none',
+                borderLeft: 'none',
+                borderRight: '1px solid rgba(255,255,255,0.06)',
+            }}>
 
-                <div className="form-control w-full">
-                    <label className="label">
-                        <span className="label-text font-medium text-base-content">Target URL</span>
+            {/* Top light highlight */}
+            <div className="w-full h-px shrink-0"
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)' }} />
+
+            {/* Scrollable form */}
+            <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-5">
+
+                {/* Target URL */}
+                <div>
+                    <label className="text-[11px] font-medium uppercase tracking-[0.15em] mb-2 block"
+                        style={{ color: 'var(--text-muted)' }}>
+                        Target URL
                     </label>
                     <input
                         type="text"
-                        placeholder="https://api.example.com/endpoint"
-                        className="input input-bordered input-sm w-full font-mono text-sm"
+                        placeholder="https://api.example.com"
+                        className={inputClass}
                         value={target}
                         onChange={(e) => setTarget(e.target.value)}
                         disabled={isRunning}
                     />
                 </div>
 
-                <div className="divider my-1"></div>
-
-                <div className="form-control w-full">
-                    <label className="label">
-                        <span className="label-text font-medium text-base-content">Virtual Users</span>
-                    </label>
-                    <input
-                        type="number"
-                        min="1"
-                        max="1000"
-                        className="input input-bordered input-sm w-full font-mono text-sm"
-                        value={users}
-                        onChange={(e) => setUsers(Number(e.target.value))}
-                        disabled={isRunning}
-                    />
-                </div>
-
-                <div className="divider my-1"></div>
-
-                <div className="form-control w-full">
-                    <label className="label">
-                        <span className="label-text font-medium text-base-content">Duration</span>
-                    </label>
-                    <select
-                        className="select select-bordered select-sm w-full font-mono text-sm"
-                        value={duration}
-                        onChange={(e) => setDuration(Number(e.target.value))}
-                        disabled={isRunning}
-                    >
-                        <option value={10000}>10s</option>
-                        <option value={30000}>30s</option>
-                        <option value={60000}>60s</option>
-                        <option value={120000}>120s</option>
-                    </select>
-                </div>
-
-                <div className="divider my-1"></div>
-
-                {/* SLA Thresholds Section */}
-                <div className="form-control w-full">
-                    <label className="label pb-0">
-                        <span className="label-text font-medium text-base-content text-xs uppercase tracking-widest">SLA Thresholds</span>
-                    </label>
-                </div>
-
-                <div className="form-control w-full mt-1">
-                    <label className="label py-0.5">
-                        <span className="label-text text-xs text-base-content/70">Max p99 Latency (ms)</span>
-                    </label>
-                    <input
-                        type="number"
-                        min="50"
-                        max="30000"
-                        className="input input-bordered input-sm w-full font-mono text-sm"
-                        value={slaP99}
-                        onChange={(e) => setSlaP99(Number(e.target.value))}
-                        disabled={isRunning}
-                    />
-                </div>
-
-                <div className="form-control w-full mt-1">
-                    <label className="label py-0.5">
-                        <span className="label-text text-xs text-base-content/70">Min Throughput (req/s)</span>
-                    </label>
-                    <input
-                        type="number"
-                        min="1"
-                        max="10000"
-                        className="input input-bordered input-sm w-full font-mono text-sm"
-                        value={minThroughput}
-                        onChange={(e) => setMinThroughput(Number(e.target.value))}
-                        disabled={isRunning}
-                    />
-                </div>
-
-                <div className="form-control w-full mt-1">
-                    <label className="label py-0.5">
-                        <span className="label-text text-xs text-base-content/70">Max Error Rate (%)</span>
-                    </label>
-                    <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.5"
-                        className="input input-bordered input-sm w-full font-mono text-sm"
-                        value={maxErrorRate}
-                        onChange={(e) => setMaxErrorRate(Number(e.target.value))}
-                        disabled={isRunning}
-                    />
-                </div>
-
-                <div className="divider my-1"></div>
-
-                <div className="form-control w-full">
-                    <label className="label">
-                        <span className="label-text font-medium text-base-content mb-1">Load Strategy</span>
-                    </label>
-                    <div className="tabs tabs-boxed w-full p-1 bg-base-300 grid grid-cols-3">
-                        {['spike', 'ramp', 'step'].map((strat) => (
-                            <a
-                                key={strat}
-                                className={`tab tab-sm capitalize ${strategy === strat ? 'tab-active bg-primary text-base-100 font-medium' : 'text-base-content'}`}
-                                onClick={() => !isRunning && setStrategy(strat)}
-                            >
-                                {strat}
-                            </a>
-                        ))}
+                {/* Users & Duration */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className="text-[11px] font-medium uppercase tracking-[0.15em] mb-2 block"
+                            style={{ color: 'var(--text-muted)' }}>
+                            Users
+                        </label>
+                        <input
+                            type="number" min="1" max="1000"
+                            className={inputClass}
+                            value={users}
+                            onChange={(e) => setUsers(Number(e.target.value))}
+                            disabled={isRunning}
+                        />
                     </div>
-                    <p className="text-[10px] text-base-content/40 mt-1.5 ml-0.5">{strategyDescriptions[strategy]}</p>
+                    <div>
+                        <label className="text-[11px] font-medium uppercase tracking-[0.15em] mb-2 block"
+                            style={{ color: 'var(--text-muted)' }}>
+                            Duration
+                        </label>
+                        <select
+                            className={inputClass + ' cursor-pointer appearance-none'}
+                            value={duration}
+                            onChange={(e) => setDuration(Number(e.target.value))}
+                            disabled={isRunning}
+                        >
+                            <option value={10000}>10s</option>
+                            <option value={30000}>30s</option>
+                            <option value={60000}>60s</option>
+                            <option value={120000}>120s</option>
+                        </select>
+                    </div>
                 </div>
 
+                {/* Divider */}
+                <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)' }} />
+
+                {/* SLA Thresholds */}
+                <div>
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-3 flex items-center gap-2"
+                        style={{ color: 'var(--accent)' }}>
+                        <div className="w-1 h-3.5 rounded-full"
+                            style={{ background: 'linear-gradient(180deg, var(--accent), transparent)' }} />
+                        SLA Thresholds
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        <div>
+                            <label className="text-[10px] mb-1.5 block" style={{ color: 'var(--text-muted)' }}>p99 Latency (ms)</label>
+                            <input type="number" min="50" max="30000" className={inputClass}
+                                value={slaP99} onChange={(e) => setSlaP99(Number(e.target.value))} disabled={isRunning} />
+                        </div>
+                        <div>
+                            <label className="text-[10px] mb-1.5 block" style={{ color: 'var(--text-muted)' }}>Min Throughput (req/s)</label>
+                            <input type="number" min="1" max="10000" className={inputClass}
+                                value={minThroughput} onChange={(e) => setMinThroughput(Number(e.target.value))} disabled={isRunning} />
+                        </div>
+                        <div>
+                            <label className="text-[10px] mb-1.5 block" style={{ color: 'var(--text-muted)' }}>Max Error Rate (%)</label>
+                            <input type="number" min="0" max="100" step="0.5" className={inputClass}
+                                value={maxErrorRate} onChange={(e) => setMaxErrorRate(Number(e.target.value))} disabled={isRunning} />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Divider */}
+                <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)' }} />
+
+                {/* Load Strategy */}
+                <div>
+                    <label className="text-[11px] font-medium uppercase tracking-[0.15em] mb-3 block"
+                        style={{ color: 'var(--text-muted)' }}>
+                        Load Strategy
+                    </label>
+                    <div className="flex flex-col gap-2">
+                        {strategies.map((strat) => {
+                            const isActive = strategy === strat.key;
+                            const Icon = strat.icon;
+                            return (
+                                <button
+                                    key={strat.key}
+                                    onClick={() => !isRunning && setStrategy(strat.key)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-250 text-left"
+                                    style={{
+                                        background: isActive
+                                            ? 'rgba(249,115,22,0.08)'
+                                            : 'rgba(255,255,255,0.02)',
+                                        border: isActive
+                                            ? '1px solid rgba(249,115,22,0.25)'
+                                            : '1px solid rgba(255,255,255,0.04)',
+                                        cursor: isRunning ? 'not-allowed' : 'pointer',
+                                        boxShadow: isActive ? '0 0 20px rgba(249,115,22,0.06)' : 'none',
+                                    }}
+                                >
+                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                                        style={{
+                                            background: isActive ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
+                                        }}>
+                                        <Icon className="w-3.5 h-3.5"
+                                            style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)' }} />
+                                    </div>
+                                    <div>
+                                        <div className="text-[12px] font-semibold"
+                                            style={{ color: isActive ? 'var(--accent)' : 'var(--text-secondary)' }}>
+                                            {strat.label}
+                                        </div>
+                                        <div className="text-[10px] leading-snug mt-0.5"
+                                            style={{ color: 'var(--text-muted)' }}>
+                                            {strat.desc}
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
 
-            {/* Always-visible Run button pinned to bottom */}
-            <div className="p-4 border-t border-base-300 bg-base-200">
+            {/* Run button */}
+            <div className="px-4 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                 <button
+                    className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 relative overflow-hidden"
                     style={{
-                        background: isRunning ? undefined : 'linear-gradient(135deg, #22c55e, #16a34a)',
-                        boxShadow: isRunning ? undefined : '0 0 16px rgba(34,197,94,0.35)',
-                        border: 'none',
+                        background: isRunning
+                            ? 'rgba(255,255,255,0.04)'
+                            : 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #f97316 100%)',
+                        backgroundSize: '200% auto',
+                        boxShadow: isRunning ? 'none' : '0 0 30px rgba(249,115,22,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
+                        border: isRunning ? '1px solid rgba(255,255,255,0.06)' : 'none',
                         color: '#fff',
-                        fontWeight: 700,
-                        letterSpacing: '0.04em',
-                        transition: 'box-shadow 0.2s, transform 0.1s',
+                        letterSpacing: '0.05em',
+                        cursor: isRunning ? 'not-allowed' : 'pointer',
+                        opacity: isRunning ? 0.5 : 1,
+                        animation: isRunning ? 'none' : 'shimmer 3s linear infinite',
                     }}
-                    className="btn w-full disabled:opacity-60"
                     onClick={handleRunTest}
                     disabled={isRunning}
-                    onMouseEnter={e => { if (!isRunning) e.currentTarget.style.boxShadow = '0 0 24px rgba(34,197,94,0.55)'; }}
-                    onMouseLeave={e => { if (!isRunning) e.currentTarget.style.boxShadow = '0 0 16px rgba(34,197,94,0.35)'; }}
+                    onMouseEnter={e => { if (!isRunning) e.currentTarget.style.boxShadow = '0 0 40px rgba(249,115,22,0.4), inset 0 1px 0 rgba(255,255,255,0.15)'; }}
+                    onMouseLeave={e => { if (!isRunning) e.currentTarget.style.boxShadow = '0 0 30px rgba(249,115,22,0.25), inset 0 1px 0 rgba(255,255,255,0.1)'; }}
                 >
                     {isRunning ? (
-                        <>
-                            <span className="loading loading-spinner"></span>
+                        <span className="flex items-center justify-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
                             Running...
-                        </>
+                        </span>
                     ) : (
-                        '▶  Run Test'
+                        <span className="flex items-center justify-center gap-2">
+                            <Play className="w-4 h-4" fill="currentColor" />
+                            Run Test
+                        </span>
                     )}
                 </button>
             </div>

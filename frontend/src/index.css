@@ -2,19 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-deep: #0a0a1a;
+  --accent: #f97316;
+  --accent-glow: rgba(249, 115, 22, 0.15);
+  --success: #34d399;
+  --error: #f87171;
+  --warning: #fbbf24;
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.30);
+}
+
 [data-theme="night"] {
-  --color-base-100: #0d1117;
-  --color-base-200: #161b22;
-  --color-base-300: #21262d;
-  --color-base-content: #e6edf3;
-  --color-primary: #00d4ff;
-  --color-success: #2ea043;
-  --color-warning: #d29922;
-  --color-error: #f85149;
+  --color-base-100: #0a0a1a;
+  --color-base-200: #111125;
+  --color-base-300: #1a1a30;
+  --color-base-content: #f0f0f5;
+  --color-primary: #f97316;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
 }
 
 * {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Outfit', 'Inter', sans-serif;
   box-sizing: border-box;
 }
 
@@ -27,24 +39,246 @@ code,
 }
 
 body {
-  background-color: var(--color-base-100);
-  color: var(--color-base-content);
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
   margin: 0;
-  overflow: hidden; /* Shell does not scroll */
+  overflow: hidden;
 }
 
-/* Custom scrollbar for inner panels */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* ── Mesh gradient background orbs ── */
+#root {
+  position: relative;
 }
+
+#root::before,
+#root::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+
+/* Orb 1 — Purple, top-left */
+#root::before {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, transparent 70%);
+  top: -10%;
+  left: -5%;
+  animation: float-1 25s ease-in-out infinite;
+}
+
+/* Orb 2 — Orange, bottom-right */
+#root::after {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.14) 0%, transparent 70%);
+  bottom: -10%;
+  right: -5%;
+  animation: float-2 20s ease-in-out infinite;
+}
+
+/* Orb 3 — Teal (on body) */
+body::after {
+  content: '';
+  position: fixed;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 70%);
+  bottom: 5%;
+  left: 30%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: float-3 22s ease-in-out infinite;
+}
+
+@keyframes float-1 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(40px, 25px) scale(1.05);
+  }
+
+  66% {
+    transform: translate(-20px, 40px) scale(0.97);
+  }
+}
+
+@keyframes float-2 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(-30px, -20px) scale(1.03);
+  }
+
+  66% {
+    transform: translate(25px, -35px) scale(0.96);
+  }
+}
+
+@keyframes float-3 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(35px, -30px) scale(1.06);
+  }
+}
+
+/* ── Glass utility classes ── */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.20);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.glass:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-primary);
+  transition: all 0.25s ease;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: rgba(249, 115, 22, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12), 0 0 20px rgba(249, 115, 22, 0.06) !important;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.glass-input:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Glow effects ── */
+.glow-accent {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.15), 0 0 60px rgba(249, 115, 22, 0.06);
+}
+
+.glow-left-accent {
+  box-shadow: -4px 0 20px rgba(249, 115, 22, 0.12), 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.glow-left-indigo {
+  box-shadow: -4px 0 20px rgba(99, 102, 241, 0.12), 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Hover lift ── */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Animated shimmer on buttons ── */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.btn-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+}
+
+/* ── Pulse ring for LIVE badge ── */
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px rgba(249, 115, 22, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+  }
+}
+
+.pulse-ring {
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #21262d;
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #30363d;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Override input focus globally ── */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+/* ── Recharts legend ── */
+.recharts-legend-item-text {
+  color: var(--text-secondary) !important;
+  font-size: 12px !important;
+}
+
+/* ── Frosted tooltip for charts ── */
+.recharts-default-tooltip {
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
 }

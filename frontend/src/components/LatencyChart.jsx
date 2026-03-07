@@ -1,50 +1,104 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid,
-    Tooltip, Legend, ResponsiveContainer, ReferenceLine
+    Tooltip, Legend, ResponsiveContainer, ReferenceLine, Area, AreaChart
 } from 'recharts';
 
 export default function LatencyChart({ metricsHistory, configuredSla = 500 }) {
-    const data = metricsHistory.map((m, i) => ({
-        ...m,
-        time: i
-    }));
+    const [timeRange, setTimeRange] = useState('30s');
+    const data = metricsHistory.map((m, i) => ({ ...m, time: i }));
+    const hasData = data.length > 0;
 
-    // Recharts requires at least some tick info, but we'll keep it clean.
+    const ranges = ['30s', '60s', '5m'];
+
+    const tooltipStyle = {
+        backgroundColor: 'rgba(10,10,26,0.85)',
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderRadius: '12px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(16px)',
+    };
+
     return (
-        <div className="card bg-base-200 w-full overflow-hidden shrink-0 border border-base-300">
-            <div className="card-body p-4">
-                <h2 className="card-title text-base-content text-sm ml-2 mb-2">Latency Profile</h2>
-                <div className="w-full h-[220px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
-                            <XAxis
-                                dataKey="time"
-                                stroke="#6e7681"
-                                tick={{ fill: '#6e7681', fontSize: 12 }}
-                                tickFormatter={(val) => `${val}s`}
-                                minTickGap={20}
-                            />
-                            <YAxis
-                                stroke="#6e7681"
-                                tick={{ fill: '#6e7681', fontSize: 12 }}
-                                unit="ms"
-                                width={60}
-                            />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: '#161b22', borderColor: '#30363d', borderRadius: '6px' }}
-                                itemStyle={{ fontFamily: 'JetBrains Mono' }}
-                                labelStyle={{ color: '#8b949e', marginBottom: '4px' }}
-                                labelFormatter={(label) => `Time: ${label}s`}
-                            />
-                            <Legend verticalAlign="top" height={36} iconType="circle" />
-                            <ReferenceLine y={configuredSla} stroke="#d29922" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: `${configuredSla}ms SLA`, fill: '#d29922', fontSize: 12 }} />
-                            <Line type="monotone" dataKey="p50" stroke="#00d4ff" strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
-                            <Line type="monotone" dataKey="p95" stroke="#d29922" strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
-                            <Line type="monotone" dataKey="p99" stroke="#f85149" strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
-                        </LineChart>
-                    </ResponsiveContainer>
+        <div className="glass w-full overflow-hidden">
+            <div className="p-5">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+                            Response Latency (ms)
+                        </h2>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#60a5fa' }}></span>
+                                <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>p50 Latency</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'var(--accent)' }}></span>
+                                <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>p99 Latency</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Time range selector */}
+                    <div className="flex rounded-lg overflow-hidden"
+                        style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                        {ranges.map(r => (
+                            <button key={r}
+                                className="px-3 py-1.5 text-[11px] font-semibold transition-all duration-150"
+                                style={{
+                                    background: timeRange === r ? 'rgba(255,255,255,0.1)' : 'transparent',
+                                    color: timeRange === r ? 'var(--text-primary)' : 'var(--text-muted)',
+                                    cursor: 'pointer',
+                                    border: 'none',
+                                    borderRight: r !== '5m' ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                                }}
+                                onClick={() => setTimeRange(r)}
+                            >{r}</button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="w-full h-[260px]">
+                    {!hasData ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <div className="text-center">
+                                <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center animate-pulse"
+                                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                    <span className="text-lg opacity-30">📊</span>
+                                </div>
+                                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Waiting for test data...</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                <defs>
+                                    <linearGradient id="p99Fill" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.15} />
+                                        <stop offset="95%" stopColor="var(--accent)" stopOpacity={0.01} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                                <XAxis dataKey="time" stroke="rgba(255,255,255,0.08)" tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 11 }}
+                                    tickFormatter={(v) => {
+                                        const total = data.length;
+                                        return `-${total - v}s`;
+                                    }} minTickGap={30} />
+                                <YAxis stroke="rgba(255,255,255,0.08)" tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 11 }} unit="ms" width={55} />
+                                <Tooltip contentStyle={tooltipStyle}
+                                    itemStyle={{ fontFamily: 'JetBrains Mono', fontSize: '12px' }}
+                                    labelStyle={{ color: 'var(--text-muted)', marginBottom: '4px' }}
+                                    labelFormatter={(l) => `Time: -${data.length - l}s`} />
+                                <ReferenceLine y={configuredSla} stroke="var(--accent)" strokeDasharray="6 4" strokeOpacity={0.5}
+                                    label={{ position: 'right', value: `SLA (${configuredSla}ms)`, fill: 'var(--accent)', fontSize: 11, opacity: 0.7 }} />
+                                <Area type="monotone" dataKey="p99" stroke="var(--accent)" strokeWidth={2.5}
+                                    fill="url(#p99Fill)" fillOpacity={1} dot={false}
+                                    activeDot={{ r: 4, fill: 'var(--accent)' }} isAnimationActive={false} name="p99" />
+                                <Line type="monotone" dataKey="p50" stroke="#60a5fa" strokeWidth={2}
+                                    dot={false} activeDot={{ r: 4 }} isAnimationActive={false} name="p50" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    )}
                 </div>
             </div>
         </div>

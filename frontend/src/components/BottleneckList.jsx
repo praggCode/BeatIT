@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Database, MemoryStick, AlertTriangle, AlertOctagon } from 'lucide-react';
+import { Cpu, Database, MemoryStick, AlertTriangle, AlertOctagon, ArrowRight } from 'lucide-react';
 
 const ICONS = {
     cpu: Cpu,
@@ -29,8 +29,8 @@ const BottleneckList = ({ bottlenecks }) => {
                     <div
                         key={b.id}
                         className={`p-4 rounded-xl border transition-all ${isCritical
-                                ? 'bg-red-950/30 border-red-800/50 hover:border-red-700'
-                                : 'bg-yellow-950/30 border-yellow-800/50 hover:border-yellow-700'
+                            ? 'bg-red-950/30 border-red-800/50 hover:border-red-700'
+                            : 'bg-yellow-950/30 border-yellow-800/50 hover:border-yellow-700'
                             }`}
                     >
                         <div className="flex items-start gap-3">
@@ -41,8 +41,8 @@ const BottleneckList = ({ bottlenecks }) => {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isCritical
-                                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                                            : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                        : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                                         }`}>
                                         {isCritical ? 'CRITICAL' : 'WARNING'}
                                     </span>
@@ -51,7 +51,7 @@ const BottleneckList = ({ bottlenecks }) => {
                                 <p className="text-sm font-semibold text-slate-200 mb-1">{b.title}</p>
                                 <p className="text-xs text-slate-400 mb-2 font-mono">{b.metric}</p>
                                 <div className="flex items-start gap-1.5">
-                                    <span className="text-xs text-slate-600 shrink-0">→</span>
+                                    <ArrowRight className="w-3 h-3 text-slate-600 shrink-0 mt-0.5" />
                                     <p className="text-xs text-slate-500">{b.suggestion}</p>
                                 </div>
                             </div>

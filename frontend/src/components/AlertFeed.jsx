@@ -1,32 +1,64 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, XCircle } from 'lucide-react';
+import { AlertTriangle, XCircle, ShieldCheck } from 'lucide-react';
 
 export default function AlertFeed({ alerts }) {
+    const criticalCount = alerts?.filter(a => a.severity === 'critical').length || 0;
+    const warningCount = alerts?.filter(a => a.severity !== 'critical').length || 0;
+
     return (
-        <div className="card bg-base-200 w-full shrink-0 border border-base-300">
-            <div className="card-body p-4">
-                <div className="flex items-center gap-3 mb-4">
-                    <h2 className="card-title text-base-content text-sm ml-2">Alerts</h2>
-                    <div className="badge badge-neutral font-mono">{alerts?.length || 0}</div>
+        <div className="glass w-full shrink-0">
+            <div className="p-5">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                            Alerts
+                        </h2>
+                        {alerts?.length > 0 && (
+                            <div className="flex items-center gap-1.5">
+                                {criticalCount > 0 && (
+                                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold"
+                                        style={{ background: 'rgba(248,113,113,0.08)', color: 'var(--error)', border: '1px solid rgba(248,113,113,0.15)', backdropFilter: 'blur(8px)' }}>
+                                        {criticalCount} critical
+                                    </span>
+                                )}
+                                {warningCount > 0 && (
+                                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold"
+                                        style={{ background: 'rgba(251,191,36,0.08)', color: 'var(--warning)', border: '1px solid rgba(251,191,36,0.15)', backdropFilter: 'blur(8px)' }}>
+                                        {warningCount} warning
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    {!alerts?.length && (
+                        <span className="flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-lg"
+                            style={{ background: 'rgba(52,211,153,0.06)', color: 'var(--success)', border: '1px solid rgba(52,211,153,0.12)', backdropFilter: 'blur(8px)' }}>
+                            <ShieldCheck size={12} />
+                            HEALTHY
+                        </span>
+                    )}
                 </div>
 
-                <div className="w-full flex flex-col gap-2 overflow-y-auto max-h-[300px] min-h-[60px] pr-1">
+                <div className="w-full flex flex-col gap-2 overflow-y-auto max-h-[300px] min-h-[50px] pr-1">
                     {(!alerts || alerts.length === 0) ? (
-                        <div className="flex items-center justify-center h-full text-base-content/40 text-sm mt-4">
-                            No alerts — system healthy
+                        <div className="flex items-center justify-center py-6">
+                            <div className="text-center">
+                                <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center"
+                                    style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.1)' }}>
+                                    <ShieldCheck size={18} style={{ color: 'var(--success)', opacity: 0.5 }} />
+                                </div>
+                                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>No alerts — system healthy</p>
+                            </div>
                         </div>
                     ) : (
                         <AnimatePresence>
                             {alerts.map((alert, idx) => {
-                                // Determine styling
                                 const isCritical = alert.severity === 'critical';
-                                const alertClass = isCritical ? 'alert-error' : 'alert-warning';
+                                const accentColor = isCritical ? 'var(--error)' : 'var(--warning)';
                                 const Icon = isCritical ? XCircle : AlertTriangle;
+                                const glowColor = isCritical ? 'rgba(248,113,113,0.08)' : 'rgba(251,191,36,0.08)';
 
-                                // Unique ID for framer motion if not supplied; we'll assume array index for now,
-                                // but strictly speaking a true ID from backend is better. 
-                                // Using alert type + message as an ID substitute, but reversing for newest on top is already done in hook.
                                 return (
                                     <motion.div
                                         key={`${alert.type}-${alert.timestamp || idx}`}
@@ -34,17 +66,32 @@ export default function AlertFeed({ alerts }) {
                                         animate={{ x: 0, opacity: 1 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
                                         transition={{ duration: 0.15, ease: 'easeOut' }}
-                                        className={`alert ${alertClass} rounded-lg shadow-sm`}
+                                        className="rounded-xl flex items-start gap-3 p-3 transition-colors duration-200"
+                                        style={{
+                                            background: glowColor,
+                                            borderLeft: `3px solid`,
+                                            borderLeftColor: accentColor,
+                                            border: `1px solid ${isCritical ? 'rgba(248,113,113,0.1)' : 'rgba(251,191,36,0.1)'}`,
+                                            borderLeftWidth: '3px',
+                                            boxShadow: `-4px 0 15px ${glowColor}`,
+                                            backdropFilter: 'blur(8px)',
+                                        }}
                                     >
-                                        <Icon className="w-5 h-5 shrink-0" />
-                                        <div className="flex flex-col flex-1">
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-mono font-bold text-sm tracking-tight">{alert.type}</span>
+                                        <Icon className="w-4 h-4 shrink-0 mt-0.5" style={{ color: accentColor }} />
+                                        <div className="flex flex-col flex-1 min-w-0">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="font-mono font-bold text-[12px] tracking-tight truncate" style={{ color: accentColor }}>
+                                                    {alert.type}
+                                                </span>
                                                 {alert.timestamp !== undefined && (
-                                                    <span className="text-xs opacity-70 font-mono">{alert.timestamp}s</span>
+                                                    <span className="text-[10px] font-mono shrink-0" style={{ color: 'var(--text-muted)' }}>
+                                                        {alert.timestamp}s
+                                                    </span>
                                                 )}
                                             </div>
-                                            <span className="text-sm opacity-90 mt-0.5">{alert.message}</span>
+                                            <span className="text-[12px] mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
+                                                {alert.message}
+                                            </span>
                                         </div>
                                     </motion.div>
                                 );

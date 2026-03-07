@@ -1,55 +1,53 @@
 import React from 'react';
-import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid,
-    Tooltip, ResponsiveContainer
-} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
-export default function ErrorRateChart({ metricsHistory }) {
-    const data = metricsHistory.map((m, i) => ({
-        ...m,
-        errorRate: parseFloat(m.errorRate || 0),
-        time: i
-    }));
+export default function ErrorRateChart({ metricsHistory, maxErrorRate = 5 }) {
+    const data = metricsHistory.map((m, i) => ({ ...m, errorRate: parseFloat(m.errorRate || 0), time: i }));
+    const hasData = data.length > 0;
+
+    const tooltipStyle = {
+        backgroundColor: 'rgba(10,10,26,0.85)',
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderRadius: '12px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(16px)',
+    };
 
     return (
-        <div className="card bg-base-200 w-full h-full overflow-hidden border border-base-300">
-            <div className="card-body p-4 flex flex-col h-full">
-                <h2 className="card-title text-base-content text-sm ml-2 mb-2 shrink-0">Error Rate</h2>
-                <div className="w-full flex-1 min-h-[250px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
-                            <XAxis
-                                dataKey="time"
-                                stroke="#6e7681"
-                                tick={{ fill: '#6e7681', fontSize: 12 }}
-                                tickFormatter={(val) => `${val}s`}
-                                minTickGap={20}
-                            />
-                            <YAxis
-                                stroke="#6e7681"
-                                tick={{ fill: '#6e7681', fontSize: 12 }}
-                                width={40}
-                                domain={[0, 'dataMax > 5 ? dataMax : 5']}
-                                tickFormatter={(val) => `${val}%`}
-                            />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: '#161b22', borderColor: '#30363d', borderRadius: '6px' }}
-                                itemStyle={{ fontFamily: 'JetBrains Mono', color: '#f85149' }}
-                                labelStyle={{ color: '#8b949e', marginBottom: '4px' }}
-                                labelFormatter={(label) => `Time: ${label}s`}
-                                formatter={(value) => [`${value}%`, 'Errors']}
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="errorRate"
-                                stroke="#f85149"
-                                fill="#f85149"
-                                fillOpacity={0.2}
-                                isAnimationActive={false}
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
+        <div className="glass w-full h-full overflow-hidden">
+            <div className="p-5 flex flex-col h-full">
+                <h2 className="text-base font-semibold shrink-0 mb-1" style={{ color: 'var(--text-primary)' }}>
+                    Error Rate (%)
+                </h2>
+                <div className="w-full flex-1 min-h-[220px]">
+                    {!hasData ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <div className="text-center">
+                                <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center animate-pulse"
+                                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                    <span className="text-lg opacity-30">⚠️</span>
+                                </div>
+                                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Waiting for test data...</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                                <XAxis dataKey="time" stroke="rgba(255,255,255,0.08)" tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 10 }} tickFormatter={(v) => `${v}s`} minTickGap={20} />
+                                <YAxis stroke="rgba(255,255,255,0.08)" tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 10 }} width={35} domain={[0, 'auto']} tickFormatter={(v) => `${v}%`} />
+                                <Tooltip contentStyle={tooltipStyle}
+                                    itemStyle={{ fontFamily: 'JetBrains Mono', color: 'var(--error)', fontSize: '12px' }}
+                                    labelStyle={{ color: 'var(--text-muted)', marginBottom: '4px' }}
+                                    labelFormatter={(l) => `Time: ${l}s`}
+                                    formatter={(v) => [`${v}%`, 'Errors']} />
+                                <ReferenceLine y={maxErrorRate} stroke="var(--error)" strokeDasharray="6 4" strokeOpacity={0.5}
+                                    label={{ position: 'right', value: `${maxErrorRate}% Limit`, fill: 'var(--error)', fontSize: 10, opacity: 0.7 }} />
+                                <Line type="monotone" dataKey="errorRate" stroke="var(--error)" strokeWidth={2} dot={false}
+                                    activeDot={{ r: 4, fill: 'var(--error)' }} isAnimationActive={false} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    )}
                 </div>
             </div>
         </div>

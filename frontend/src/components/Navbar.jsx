@@ -1,34 +1,90 @@
 import React from 'react';
+import GradientText from './GradientText';
 
 export default function Navbar({ connected, status }) {
     const isRunning = status === 'running';
 
     return (
-        <div className="navbar bg-base-200 border-b border-base-300 min-h-[64px] shrink-0 px-6">
-            <div className="navbar-start flex items-center gap-4">
-                <span className="font-mono text-[20px] text-primary">BeatIT</span>
-                <div className="relative flex h-3 w-3">
+        <div className="w-full shrink-0 px-6 flex items-center justify-between glass-strong relative z-10"
+            style={{
+                height: '56px',
+                borderRadius: 0,
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                borderTop: 'none',
+                borderLeft: 'none',
+                borderRight: 'none',
+            }}>
+            {/* Brand */}
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center relative"
+                        style={{
+                            background: 'linear-gradient(135deg, #f97316, #ea580c)',
+                            boxShadow: '0 0 20px rgba(249,115,22,0.3)',
+                        }}>
+                        <span className="text-white text-sm font-bold">B</span>
+                    </div>
+                    <GradientText
+                        colors={['#f97316', '#fbbf24', '#f97316']}
+                        animationSpeed={6}
+                        className="text-xl font-bold tracking-tight"
+                    >
+                        BeatIT
+                    </GradientText>
+                </div>
+                <div className="relative flex h-2 w-2 ml-1">
                     {isRunning ? (
                         <>
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                                style={{ backgroundColor: 'var(--success)' }}></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2"
+                                style={{ backgroundColor: 'var(--success)' }}></span>
                         </>
                     ) : (
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-gray-500"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2"
+                            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}></span>
                     )}
                 </div>
             </div>
 
-            <div className="navbar-center">
-                {connected ? (
-                    <div className="badge badge-success font-mono">LIVE</div>
-                ) : (
-                    <div className="badge badge-error font-mono">OFFLINE</div>
-                )}
+            {/* Breadcrumb */}
+            <div className="hidden md:flex items-center gap-2">
+                <span className="text-[11px] tracking-[0.2em] font-medium"
+                    style={{ color: 'var(--text-muted)' }}>
+                    PAGES
+                </span>
+                <span style={{ color: 'rgba(255,255,255,0.1)' }}>/</span>
+                <span className="text-[11px] tracking-[0.2em] font-medium"
+                    style={{ color: 'var(--text-secondary)' }}>
+                    DASHBOARD
+                </span>
             </div>
 
-            <div className="navbar-end">
-                {/* Right side explicitly kept clean as per specs */}
+            {/* Status badge */}
+            <div>
+                {connected ? (
+                    <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-semibold pulse-ring"
+                        style={{
+                            background: 'rgba(52,211,153,0.08)',
+                            color: 'var(--success)',
+                            border: '1px solid rgba(52,211,153,0.2)',
+                            backdropFilter: 'blur(10px)',
+                        }}>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--success)' }}></span>
+                        LIVE
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-semibold"
+                        style={{
+                            background: 'rgba(248,113,113,0.08)',
+                            color: 'var(--error)',
+                            border: '1px solid rgba(248,113,113,0.2)',
+                            backdropFilter: 'blur(10px)',
+                        }}>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--error)' }}></span>
+                        OFFLINE
+                    </div>
+                )}
             </div>
         </div>
     );

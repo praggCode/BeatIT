@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useWebSocket } from './hooks/useWebSocket';
-import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar';
+import NavigationSidebar from './components/NavigationSidebar';
+import TopBar from './components/TopBar';
 import StatCards from './components/StatCards';
 import LatencyChart from './components/LatencyChart';
 import ThroughputChart from './components/ThroughputChart';
@@ -9,51 +10,37 @@ import ErrorRateChart from './components/ErrorRateChart';
 import AlertFeed from './components/AlertFeed';
 import DiagnosisPanel from './components/DiagnosisPanel';
 import RunComparison from './components/RunComparison';
+import TestConfigPage from './components/TestConfigPage';
 
 export default function App() {
     const ws = useWebSocket();
+    const [activePage, setActivePage] = useState('analytics');
     const [testDurationSecs, setTestDurationSecs] = useState(30);
     const [slaP99, setSlaP99] = useState(500);
+    const [maxErrorRate, setMaxErrorRate] = useState(5);
     const [diffData, setDiffData] = useState(null);
-    const [diffError, setDiffError] = useState(null);
     const [showComparison, setShowComparison] = useState(false);
 
     const handleStartTest = useCallback((config) => {
         setTestDurationSecs(config.duration / 1000);
         setSlaP99(config.slaP99 || 500);
+        setMaxErrorRate(config.maxErrorRate || 5);
         ws.startTest(config);
+        setActivePage('analytics');
     }, [ws]);
 
     useEffect(() => {
         if (ws.status !== 'completed') return;
-
         const fetchDiff = async () => {
             try {
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
                 const res = await fetch(`${apiUrl}/api/results/diff`, { method: 'POST' });
                 const json = await res.json();
-
                 if (res.ok && json.changes) {
-                    const shaped = json.changes.map(c => ({
-                        metric: c.metric,
-                        before: c.before,
-                        after: c.after,
-                        change: c.pctChange ?? 0,
-                        improved: c.trend === 'improved',
-                    }));
-                    setDiffData(shaped);
-                    setDiffError(null);
-                } else {
-                    console.log('[Diff] Not ready yet:', json.error);
-                    setDiffData(null);
-                    setDiffError(null);
-                }
-            } catch (err) {
-                console.error('[Diff] Fetch failed:', err.message);
-                setDiffData(null);
-            }
+                    setDiffData(json.changes.map(c => ({ metric: c.metric, before: c.before, after: c.after, change: c.pctChange ?? 0, improved: c.trend === 'improved' })));
+                } else { setDiffData(null); }
+            } catch (err) { console.error('[Diff]', err.message); setDiffData(null); }
         };
-
         fetchDiff();
     }, [ws.status]);
 
@@ -67,77 +54,111 @@ export default function App() {
         progressValue = Math.max(0, Math.min(100, (elapsed / testDurationSecs) * 100));
     }
 
-    return (
-        <div className="flex flex-col h-screen w-screen overflow-hidden bg-base-100 text-base-content antialiased">
-            <Navbar connected={ws.connected} status={ws.status} />
+    const pageTitle = {
+        analytics: 'Performance Analytics',
+        config: 'Test Configuration',
+        diagnosis: 'AI Diagnosis',
+        alerts: 'Alert Feed',
+        settings: 'Settings',
+    };
 
-            <div className="flex flex-1 overflow-hidden">
-                <Sidebar startTest={handleStartTest} status={ws.status} />
-
-                <main className="flex-1 overflow-y-auto relative bg-base-100">
-                    {isRunning && (
-                        <progress
-                            className="progress progress-primary w-full h-1 sticky top-0 z-50 rounded-none bg-base-300"
-                            value={progressValue}
-                            max="100"
-                        ></progress>
-                    )}
-
-                    <div className="p-6 space-y-6 max-w-[1600px] mx-auto w-full pb-12">
-                        <StatCards
-                            latestMetrics={ws.latestMetrics}
-                            metricsHistory={ws.metricsHistory}
-                            configuredSla={slaP99}
-                        />
-
-                        <LatencyChart
-                            metricsHistory={ws.metricsHistory}
-                            configuredSla={slaP99}
-                        />
-
-                        <div className="flex gap-6 w-full">
-                            <div className="w-[60%] shrink-0">
+    const renderPage = () => {
+        switch (activePage) {
+            case 'analytics':
+                return (
+                    <>
+                        <StatCards latestMetrics={ws.latestMetrics} metricsHistory={ws.metricsHistory} />
+                        <LatencyChart metricsHistory={ws.metricsHistory} configuredSla={slaP99} />
+                        <div className="grid grid-cols-5 gap-5 w-full">
+                            <div className="col-span-3">
                                 <ThroughputChart metricsHistory={ws.metricsHistory} />
                             </div>
-                            <div className="w-[40%] shrink-0">
-                                <ErrorRateChart metricsHistory={ws.metricsHistory} />
+                            <div className="col-span-2">
+                                <ErrorRateChart metricsHistory={ws.metricsHistory} maxErrorRate={maxErrorRate} />
                             </div>
                         </div>
-
+                    </>
+                );
+            case 'config':
+                return <TestConfigPage startTest={handleStartTest} status={ws.status} />;
+            case 'diagnosis':
+                return (
+                    <>
                         <DiagnosisPanel
-                            status={ws.status}
-                            diagnosis={ws.diagnosis}
-                            latestMetrics={ws.latestMetrics}
-                            target={ws.lastTarget}
+                            status={ws.status} diagnosis={ws.diagnosis}
+                            latestMetrics={ws.latestMetrics} target={ws.lastTarget}
                             hasDiff={!!diffData}
                             onToggleComparison={() => setShowComparison(v => !v)}
                             showComparison={showComparison}
                         />
-
-
                         {isCompleted && diffData && showComparison && (
-                            <div className="card bg-base-200 border-l-4 border-secondary w-full shadow-lg">
-                                <div className="card-body p-6 flex flex-col gap-4">
+                            <div className="glass w-full" style={{ borderLeft: '3px solid #6366f1' }}>
+                                <div className="p-6 flex flex-col gap-4">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h2 className="font-mono text-xl text-base-content tracking-tight">
-                                                Run Comparison
-                                            </h2>
-                                            <p className="text-xs text-base-content/40 mt-0.5">Previous run vs latest run</p>
+                                            <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Run Comparison</h2>
+                                            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Previous run vs latest run</p>
                                         </div>
-                                        <button
-                                            className="btn btn-xs btn-ghost text-base-content/40"
-                                            onClick={() => setShowComparison(false)}
-                                        >
-                                            ✕ Close
+                                        <button className="text-[11px] px-3 py-1.5 rounded-xl"
+                                            style={{ color: 'var(--text-muted)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}
+                                            onClick={() => setShowComparison(false)}>
+                                            <span className="flex items-center gap-1"><X className="w-3 h-3" /> Close</span>
                                         </button>
                                     </div>
                                     <RunComparison data={diffData} />
                                 </div>
                             </div>
                         )}
+                    </>
+                );
+            case 'alerts':
+                return <AlertFeed alerts={ws.alerts} />;
+            case 'settings':
+                return (
+                    <div className="glass p-8 max-w-2xl">
+                        <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Settings</h2>
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Settings page coming soon...</p>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
 
-                        <AlertFeed alerts={ws.alerts} />
+    return (
+        <div className="flex h-screen w-screen overflow-hidden antialiased relative"
+            style={{ background: 'var(--bg-deep)', color: 'var(--text-primary)' }}>
+
+            <NavigationSidebar activePage={activePage} onPageChange={setActivePage} />
+
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <TopBar connected={ws.connected} status={ws.status} activePage={activePage} />
+
+                {/* Progress bar */}
+                {isRunning && (
+                    <div className="w-full h-[3px] shrink-0"
+                        style={{ background: 'rgba(255,255,255,0.03)' }}>
+                        <div className="h-full transition-all duration-300"
+                            style={{
+                                width: `${progressValue}%`,
+                                background: 'linear-gradient(90deg, var(--accent), #fb923c)',
+                                boxShadow: '0 0 16px rgba(249,115,22,0.4), 0 0 40px rgba(249,115,22,0.15)',
+                            }}
+                        />
+                    </div>
+                )}
+
+                <main className="flex-1 overflow-y-auto">
+                    <div className="p-6 pb-10 max-w-[1400px] w-full">
+                        {/* Page title */}
+                        <h1 className="text-2xl font-bold tracking-tight mb-5"
+                            style={{ color: 'var(--text-primary)' }}>
+                            {pageTitle[activePage]}
+                        </h1>
+
+                        <div className="space-y-4">
+                            {renderPage()}
+                        </div>
                     </div>
                 </main>
             </div>
