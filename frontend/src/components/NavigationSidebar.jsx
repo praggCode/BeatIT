@@ -23,8 +23,8 @@ export default function NavigationSidebar({ activePage, onPageChange }) {
             <div className="px-5 py-5 flex items-center gap-2.5 shrink-0">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center"
                     style={{
-                        background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
-                        boxShadow: '0 0 20px rgba(14,165,233,0.3)',
+                        background: 'linear-gradient(135deg, #64748b, #475569)',
+                        boxShadow: '0 0 20px rgba(100,116,139,0.3)',
                     }}>
                     <span className="text-white text-sm font-bold">B</span>
                 </div>
@@ -49,11 +49,11 @@ export default function NavigationSidebar({ activePage, onPageChange }) {
                             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 w-full"
                             style={{
                                 background: isActive
-                                    ? 'linear-gradient(135deg, #0ea5e9, #0284c7)'
+                                    ? 'linear-gradient(135deg, #64748b, #475569)'
                                     : 'transparent',
                                 color: isActive ? '#fff' : 'var(--text-muted)',
                                 cursor: 'pointer',
-                                boxShadow: isActive ? '0 0 20px rgba(14,165,233,0.2)' : 'none',
+                                boxShadow: isActive ? '0 0 20px rgba(100,116,139,0.2)' : 'none',
                                 border: 'none',
                             }}
                             onMouseEnter={(e) => {
