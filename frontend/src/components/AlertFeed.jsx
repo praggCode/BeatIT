@@ -7,9 +7,9 @@ export default function AlertFeed({ alerts }) {
     const warningCount = alerts?.filter(a => a.severity !== 'critical').length || 0;
 
     return (
-        <div className="glass w-full shrink-0">
-            <div className="p-5">
-                <div className="flex items-center justify-between mb-4">
+        <div className="glass w-full" style={{ minHeight: 'calc(100vh - 180px)' }}>
+            <div className="p-4 px-5 flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                         <h2 className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
                             Alerts
@@ -40,7 +40,7 @@ export default function AlertFeed({ alerts }) {
                     )}
                 </div>
 
-                <div className="w-full flex flex-col gap-2 overflow-y-auto max-h-[300px] min-h-[50px] pr-1">
+                <div className="w-full flex flex-col gap-2 overflow-y-auto flex-1 pr-1">
                     {(!alerts || alerts.length === 0) ? (
                         <div className="flex items-center justify-center py-6">
                             <div className="text-center">

@@ -149,7 +149,7 @@ export default function App() {
                 )}
 
                 <main className="flex-1 overflow-y-auto">
-                    <div className="p-6 pb-10 max-w-[1400px] w-full">
+                    <div className="p-6 pb-4 max-w-[1400px] w-full">
                         {/* Page title */}
                         <h1 className="text-2xl font-bold tracking-tight mb-5"
                             style={{ color: 'var(--text-primary)' }}>
