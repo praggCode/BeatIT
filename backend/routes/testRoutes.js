@@ -5,6 +5,7 @@ const { runTest } = require('../services/testRunner');
 router.post('/test/start', async (req, res) => {
   const {
     target,
+    method = 'GET',
     users = 10,
     duration = 30000,
     strategy = 'spike',
@@ -18,10 +19,10 @@ router.post('/test/start', async (req, res) => {
   }
 
   // respond immediately — test runs in background, results stream via WebSocket
-  res.json({ status: 'started', target, users, duration, strategy, slaP99, minThroughput, maxErrorRate });
+  res.json({ status: 'started', target, method, users, duration, strategy, slaP99, minThroughput, maxErrorRate });
 
   // run test without awaiting so the HTTP response returns right away
-  runTest({ target, users, duration, strategy, slaP99, minThroughput, maxErrorRate }).catch(console.error);
+  runTest({ target, method, users, duration, strategy, slaP99, minThroughput, maxErrorRate }).catch(console.error);
 });
 
 module.exports = router;

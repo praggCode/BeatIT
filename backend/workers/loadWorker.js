@@ -1,7 +1,7 @@
 const { Pool } = require('undici');
 const { build } = require('hdr-histogram-js');
 
-module.exports = async ({ target, requests }) => {
+module.exports = async ({ target, method = 'GET', requests }) => {
   const url = new URL(target);
   const pool = new Pool(url.origin);
   const histogram = build({ lowestDiscernibleValue: 1, highestTrackableValue: 30000 });
@@ -11,7 +11,7 @@ module.exports = async ({ target, requests }) => {
   for (let i = 0; i < requests; i++) {
     const start = Date.now();
     try {
-      const res = await pool.request({ method: 'GET', path: url.pathname || '/' });
+      const res = await pool.request({ method: method.toUpperCase(), path: url.pathname || '/' });
       await res.body.text(); // drain the response body or it hangs
 
       if (res.statusCode >= 400) {

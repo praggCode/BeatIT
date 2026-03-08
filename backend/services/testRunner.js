@@ -42,7 +42,7 @@ function getActiveUsers(strategy, totalUsers, elapsed, totalDuration) {
   return totalUsers;
 }
 
-async function runTest({ target, users, duration, strategy = 'spike', slaP99, minThroughput = 10, maxErrorRate = 5 }) {
+async function runTest({ target, method = 'GET', users, duration, strategy = 'spike', slaP99, minThroughput = 10, maxErrorRate = 5 }) {
   broadcast({ type: 'status', data: { state: 'running' } });
 
   const startTime = Date.now();
@@ -101,7 +101,7 @@ async function runTest({ target, users, duration, strategy = 'spike', slaP99, mi
 
     while (activeWorkers < targetUsers && isRunning) {
       activeWorkers++;
-      pool.run({ target, requests: 1 }).then((res) => {
+      pool.run({ target, method, requests: 1 }).then((res) => {
         activeWorkers--;
         if (isRunning) {
           batchRequests += res.totalRequests;
