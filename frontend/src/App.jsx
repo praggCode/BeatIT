@@ -129,10 +129,10 @@ export default function App() {
         <div className="flex h-screen w-screen overflow-hidden antialiased relative"
             style={{ background: 'var(--bg-deep)', color: 'var(--text-primary)' }}>
 
-            <NavigationSidebar activePage={activePage} onPageChange={setActivePage} />
+            <NavigationSidebar activePage={activePage} onPageChange={setActivePage} alertCount={ws.alerts?.length || 0} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
-                <TopBar connected={ws.connected} status={ws.status} activePage={activePage} />
+                <TopBar connected={ws.connected} status={ws.status} activePage={activePage} alertCount={ws.alerts?.length || 0} onPageChange={setActivePage} />
 
                 {/* Progress bar */}
                 {isRunning && (

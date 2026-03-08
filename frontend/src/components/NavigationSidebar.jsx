@@ -10,7 +10,7 @@ const navItems = [
     { key: 'settings', label: 'Settings', icon: Settings2 },
 ];
 
-export default function NavigationSidebar({ activePage, onPageChange }) {
+export default function NavigationSidebar({ activePage, onPageChange, alertCount = 0 }) {
     return (
         <div className="h-full shrink-0 flex flex-col relative z-10"
             style={{
@@ -65,6 +65,22 @@ export default function NavigationSidebar({ activePage, onPageChange }) {
                         >
                             <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.2 : 1.8} />
                             <span className="text-[13px] font-semibold">{item.label}</span>
+                            {item.key === 'alerts' && alertCount > 0 && (
+                                <span
+                                    className="ml-auto flex items-center justify-center text-[10px] font-bold text-white"
+                                    style={{
+                                        minWidth: '20px',
+                                        height: '20px',
+                                        padding: '0 5px',
+                                        borderRadius: '10px',
+                                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                        boxShadow: '0 0 12px rgba(239,68,68,0.4)',
+                                        animation: 'pulse 2s ease-in-out infinite',
+                                    }}
+                                >
+                                    {alertCount > 99 ? '99+' : alertCount}
+                                </span>
+                            )}
                         </button>
                     );
                 })}

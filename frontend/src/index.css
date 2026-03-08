@@ -245,6 +245,18 @@ body::after {
   animation: pulse-ring 2s ease-out infinite;
 }
 
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar {
   width: 5px;

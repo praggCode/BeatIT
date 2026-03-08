@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bell, User } from 'lucide-react';
 
-export default function TopBar({ connected, status, activePage }) {
+export default function TopBar({ connected, status, activePage, alertCount = 0, onPageChange }) {
     const isRunning = status === 'running';
 
     const pageLabels = {
@@ -61,16 +61,42 @@ export default function TopBar({ connected, status, activePage }) {
 
             {/* Right: icons */}
             <div className="flex items-center gap-2">
-                <button className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
+                <button className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 relative"
                     style={{
                         background: 'rgba(255,255,255,0.04)',
                         border: '1px solid rgba(255,255,255,0.06)',
                         cursor: 'pointer',
                     }}
+                    onClick={() => onPageChange && onPageChange('alerts')}
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
                 >
                     <Bell className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                    {alertCount > 0 && (
+                        <span
+                            style={{
+                                position: 'absolute',
+                                top: '-4px',
+                                right: '-4px',
+                                minWidth: '18px',
+                                height: '18px',
+                                padding: '0 4px',
+                                borderRadius: '9px',
+                                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                boxShadow: '0 0 10px rgba(239,68,68,0.5)',
+                                color: '#fff',
+                                fontSize: '10px',
+                                fontWeight: '700',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                lineHeight: '1',
+                                animation: 'pulse 2s ease-in-out infinite',
+                            }}
+                        >
+                            {alertCount > 99 ? '99+' : alertCount}
+                        </span>
+                    )}
                 </button>
                 <button className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
                     style={{
