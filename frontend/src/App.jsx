@@ -11,6 +11,7 @@ import AlertFeed from './components/AlertFeed';
 import DiagnosisPanel from './components/DiagnosisPanel';
 import RunComparison from './components/RunComparison';
 import TestConfigPage from './components/TestConfigPage';
+import { AuthProvider } from './context/AuthContext';
 
 export default function App() {
     const ws = useWebSocket();
@@ -33,8 +34,14 @@ export default function App() {
         if (ws.status !== 'completed') return;
         const fetchDiff = async () => {
             try {
+                const token = localStorage.getItem('beatit_token');
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-                const res = await fetch(`${apiUrl}/api/results/diff`, { method: 'POST' });
+                const res = await fetch(`${apiUrl}/api/results/diff`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    }
+                });
                 const json = await res.json();
                 if (res.ok && json.changes) {
                     setDiffData(json.changes.map(c => ({ metric: c.metric, before: c.before, after: c.after, change: c.pctChange ?? 0, improved: c.trend === 'improved' })));
@@ -126,42 +133,44 @@ export default function App() {
     };
 
     return (
-        <div className="flex h-screen w-screen overflow-hidden antialiased relative"
-            style={{ background: 'var(--bg-deep)', color: 'var(--text-primary)' }}>
+        <AuthProvider>
+            <div className="flex h-screen w-screen overflow-hidden antialiased relative"
+                style={{ background: 'var(--bg-deep)', color: 'var(--text-primary)' }}>
 
-            <NavigationSidebar activePage={activePage} onPageChange={setActivePage} alertCount={ws.alerts?.length || 0} />
+                <NavigationSidebar activePage={activePage} onPageChange={setActivePage} alertCount={ws.alerts?.length || 0} />
 
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <TopBar connected={ws.connected} status={ws.status} activePage={activePage} alertCount={ws.alerts?.length || 0} onPageChange={setActivePage} />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                    <TopBar connected={ws.connected} status={ws.status} activePage={activePage} alertCount={ws.alerts?.length || 0} onPageChange={setActivePage} />
 
-                {/* Progress bar */}
-                {isRunning && (
-                    <div className="w-full h-[3px] shrink-0"
-                        style={{ background: 'rgba(255,255,255,0.03)' }}>
-                        <div className="h-full transition-all duration-300"
-                            style={{
-                                width: `${progressValue}%`,
-                                background: 'linear-gradient(90deg, var(--accent), #fb923c)',
-                                boxShadow: '0 0 16px rgba(249,115,22,0.4), 0 0 40px rgba(249,115,22,0.15)',
-                            }}
-                        />
-                    </div>
-                )}
-
-                <main className="flex-1 overflow-y-auto">
-                    <div className="p-6 pb-4 max-w-[1400px] w-full">
-                        {/* Page title */}
-                        <h1 className="text-2xl font-bold tracking-tight mb-5"
-                            style={{ color: 'var(--text-primary)' }}>
-                            {pageTitle[activePage]}
-                        </h1>
-
-                        <div className="space-y-4">
-                            {renderPage()}
+                    {/* Progress bar */}
+                    {isRunning && (
+                        <div className="w-full h-[3px] shrink-0"
+                            style={{ background: 'rgba(255,255,255,0.03)' }}>
+                            <div className="h-full transition-all duration-300"
+                                style={{
+                                    width: `${progressValue}%`,
+                                    background: 'linear-gradient(90deg, var(--accent), #fb923c)',
+                                    boxShadow: '0 0 16px rgba(249,115,22,0.4), 0 0 40px rgba(249,115,22,0.15)',
+                                }}
+                            />
                         </div>
-                    </div>
-                </main>
+                    )}
+
+                    <main className="flex-1 overflow-y-auto">
+                        <div className="p-6 pb-4 max-w-[1400px] w-full">
+                            {/* Page title */}
+                            <h1 className="text-2xl font-bold tracking-tight mb-5"
+                                style={{ color: 'var(--text-primary)' }}>
+                                {pageTitle[activePage]}
+                            </h1>
+
+                            <div className="space-y-4">
+                                {renderPage()}
+                            </div>
+                        </div>
+                    </main>
+                </div>
             </div>
-        </div>
+        </AuthProvider>
     );
 }

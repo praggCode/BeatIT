@@ -122,10 +122,14 @@ export function useWebSocket() {
         if (config?.target) setLastTarget(config.target);
 
         try {
+            const token = localStorage.getItem('beatit_token');
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
             const response = await fetch(`${apiUrl}/api/test/start`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
                 body: JSON.stringify(config)
             });
 

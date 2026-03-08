@@ -1,7 +1,9 @@
 import React from 'react';
-import { Bell, User } from 'lucide-react';
+import { Bell, User, LogOut } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 export default function TopBar({ connected, status, activePage, alertCount = 0, onPageChange }) {
+    const { isLoggedIn, logout } = useAuth();
     const isRunning = status === 'running';
 
     const pageLabels = {
@@ -98,17 +100,22 @@ export default function TopBar({ connected, status, activePage, alertCount = 0, 
                         </span>
                     )}
                 </button>
-                <button className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
-                    style={{
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        cursor: 'pointer',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-                >
-                    <User className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-                </button>
+                {isLoggedIn && (
+                    <button className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
+                        title="Logout"
+                        onClick={logout}
+                        style={{
+                            background: 'rgba(255,255,255,0.04)',
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            cursor: 'pointer',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                    >
+                        <User className="w-4 h-4 hover:hidden" style={{ color: 'var(--text-muted)' }} />
+                        <LogOut className="w-4 h-4 hidden hover:block" style={{ color: 'var(--text-muted)' }} />
+                    </button>
+                )}
             </div>
         </div>
     );

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Zap, TrendingUp, BarChart3, Play, Loader2 } from 'lucide-react';
+import { Zap, TrendingUp, BarChart3, Play, Loader2, Lock } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import LoginModal from './LoginModal';
 
 export default function TestConfigPage({ startTest, status }) {
     const [target, setTarget] = useState('');
@@ -10,11 +12,17 @@ export default function TestConfigPage({ startTest, status }) {
     const [slaP99, setSlaP99] = useState(500);
     const [minThroughput, setMinThroughput] = useState(10);
     const [maxErrorRate, setMaxErrorRate] = useState(5);
+    const { isLoggedIn } = useAuth();
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
     const isRunning = status === 'running';
 
     const handleRunTest = () => {
         if (isRunning) return;
+        if (!isLoggedIn) {
+            setIsLoginModalOpen(true);
+            return;
+        }
         startTest({ target, method, users, duration, strategy, slaP99, minThroughput, maxErrorRate });
     };
 
@@ -50,14 +58,28 @@ export default function TestConfigPage({ startTest, status }) {
                             );
                         })}
                     </div>
-                    <input
-                        type="text"
-                        placeholder="https://api.example.com/v1/endpoint"
-                        className={inputClass}
-                        value={target}
-                        onChange={(e) => setTarget(e.target.value)}
-                        disabled={isRunning}
-                    />
+                    <div className="relative w-full">
+                        <input
+                            type="text"
+                            placeholder="https://api.example.com/v1/endpoint"
+                            className={inputClass + (!isLoggedIn ? ' pr-10 cursor-pointer pointer-events-none' : '')}
+                            value={target}
+                            onChange={(e) => setTarget(e.target.value)}
+                            disabled={isRunning}
+                        />
+                        {/* Invisible overlay to catch clicks if not logged in */}
+                        {!isLoggedIn && (
+                            <div
+                                className="absolute inset-0 cursor-pointer z-10 rounded-xl"
+                                onClick={() => !isRunning && setIsLoginModalOpen(true)}
+                            />
+                        )}
+                        {!isLoggedIn && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none text-white/40">
+                                <Lock className="w-4 h-4" />
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -165,6 +187,10 @@ export default function TestConfigPage({ startTest, status }) {
                     </span>
                 )}
             </button>
+            <LoginModal
+                isOpen={isLoginModalOpen}
+                onClose={() => setIsLoginModalOpen(false)}
+            />
         </div>
     );
 }
