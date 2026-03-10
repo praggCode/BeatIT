@@ -6,8 +6,8 @@ export default function ErrorRateChart({ metricsHistory, maxErrorRate = 5 }) {
     const hasData = data.length > 0;
 
     const tooltipStyle = {
-        backgroundColor: 'rgba(10,10,26,0.85)',
-        borderColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: 'var(--glass-bg-4)',
+        borderColor: 'var(--glass-border-3)',
         borderRadius: '12px',
         boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
         backdropFilter: 'blur(16px)',
@@ -24,7 +24,7 @@ export default function ErrorRateChart({ metricsHistory, maxErrorRate = 5 }) {
                         <div className="w-full h-full flex items-center justify-center">
                             <div className="text-center">
                                 <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center animate-pulse"
-                                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                    style={{ background: 'var(--glass-bg-3)', border: '1px solid var(--glass-border-1)' }}>
                                     <span className="text-lg opacity-30">⚠️</span>
                                 </div>
                                 <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Waiting for test data...</p>
@@ -33,9 +33,9 @@ export default function ErrorRateChart({ metricsHistory, maxErrorRate = 5 }) {
                     ) : (
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                <XAxis dataKey="time" stroke="rgba(255,255,255,0.08)" tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 10 }} tickFormatter={(v) => `${v}s`} minTickGap={20} />
-                                <YAxis stroke="rgba(255,255,255,0.08)" tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 10 }} width={35} domain={[0, 'auto']} tickFormatter={(v) => `${v}%`} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border-1)" vertical={false} />
+                                <XAxis dataKey="time" stroke="var(--glass-border-2)" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} tickFormatter={(v) => `${v}s`} minTickGap={20} />
+                                <YAxis stroke="var(--glass-border-2)" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} width={35} domain={[0, 'auto']} tickFormatter={(v) => `${v}%`} />
                                 <Tooltip contentStyle={tooltipStyle}
                                     itemStyle={{ fontFamily: 'JetBrains Mono', color: 'var(--error)', fontSize: '12px' }}
                                     labelStyle={{ color: 'var(--text-muted)', marginBottom: '4px' }}

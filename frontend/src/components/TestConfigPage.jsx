@@ -48,8 +48,8 @@ export default function TestConfigPage({ startTest, status }) {
                                 <button key={m} onClick={() => !isRunning && setMethod(m)}
                                     className="px-3 py-2.5 rounded-xl text-[11px] font-bold tracking-wide transition-all duration-200"
                                     style={{
-                                        background: isActive ? `${colorMap[m]}20` : 'rgba(255,255,255,0.03)',
-                                        border: isActive ? `1px solid ${colorMap[m]}50` : '1px solid rgba(255,255,255,0.06)',
+                                        background: isActive ? `${colorMap[m]}20` : 'var(--glass-bg-2)',
+                                        border: isActive ? `1px solid ${colorMap[m]}50` : '1px solid var(--glass-border-1)',
                                         color: isActive ? colorMap[m] : 'var(--text-muted)',
                                         cursor: isRunning ? 'not-allowed' : 'pointer',
                                     }}>
@@ -143,13 +143,13 @@ export default function TestConfigPage({ startTest, status }) {
                             <button key={strat.key} onClick={() => !isRunning && setStrategy(strat.key)}
                                 className="flex flex-col items-center gap-1.5 p-4 rounded-xl transition-all duration-200 text-center"
                                 style={{
-                                    background: isActive ? 'rgba(148,163,184,0.1)' : 'rgba(255,255,255,0.02)',
-                                    border: isActive ? '1px solid rgba(148,163,184,0.3)' : '1px solid rgba(255,255,255,0.04)',
+                                    background: isActive ? 'rgba(148,163,184,0.1)' : 'var(--glass-bg-1)',
+                                    border: isActive ? '1px solid rgba(148,163,184,0.3)' : '1px solid var(--glass-border-1)',
                                     cursor: isRunning ? 'not-allowed' : 'pointer',
                                     boxShadow: isActive ? '0 0 25px rgba(148,163,184,0.08)' : 'none',
                                 }}>
                                 <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                                    style={{ background: isActive ? 'rgba(148,163,184,0.15)' : 'rgba(255,255,255,0.04)' }}>
+                                    style={{ background: isActive ? 'rgba(148,163,184,0.15)' : 'var(--glass-bg-3)' }}>
                                     <Icon className="w-4.5 h-4.5" style={{ color: isActive ? '#e2e8f0' : 'var(--text-muted)' }} />
                                 </div>
                                 <div>
@@ -165,10 +165,10 @@ export default function TestConfigPage({ startTest, status }) {
             {/* Run button */}
             <button className="w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-300 relative overflow-hidden"
                 style={{
-                    background: isRunning ? 'rgba(255,255,255,0.04)' : 'linear-gradient(135deg, #475569 0%, #334155 50%, #475569 100%)',
+                    background: isRunning ? 'var(--glass-bg-3)' : 'linear-gradient(135deg, #475569 0%, #334155 50%, #475569 100%)',
                     backgroundSize: '200% auto',
                     boxShadow: isRunning ? 'none' : '0 0 30px rgba(71,85,105,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-                    border: isRunning ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(148,163,184,0.2)',
+                    border: isRunning ? '1px solid var(--glass-border-1)' : '1px solid rgba(148,163,184,0.2)',
                     color: '#fff', letterSpacing: '0.05em',
                     cursor: isRunning ? 'not-allowed' : 'pointer',
                     opacity: isRunning ? 0.5 : 1,

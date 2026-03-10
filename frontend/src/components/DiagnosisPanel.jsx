@@ -103,14 +103,14 @@ export default function DiagnosisPanel({ status, diagnosis, latestMetrics, targe
                         <h3 className="text-[10px] uppercase tracking-[0.15em] mb-1.5 font-bold" style={{ color: 'var(--text-muted)' }}>Root Cause</h3>
                         <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{parsed.rootCause}</p>
                     </div>
-                    <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)' }} />
+                    <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, var(--glass-border-1), transparent)' }} />
                     <div>
                         <h3 className="text-[10px] uppercase tracking-[0.15em] mb-2 font-bold" style={{ color: 'var(--text-muted)' }}>Recommended Fix</h3>
                         <ol className="list-decimal list-outside ml-4 text-[13px] space-y-1" style={{ color: 'var(--text-secondary)' }}>
                             {parsed.fix.map((item, i) => <li key={i}>{item}</li>)}
                         </ol>
                     </div>
-                    <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)' }} />
+                    <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, var(--glass-border-1), transparent)' }} />
                     <div className="grid grid-cols-2 gap-6">
                         <div>
                             <h3 className="text-[10px] uppercase tracking-[0.15em] mb-2 font-bold" style={{ color: 'var(--text-muted)' }}>Severity</h3>

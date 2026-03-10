@@ -86,7 +86,7 @@ export default function StatCards({ latestMetrics, metricsHistory }) {
                                 {card.label}
                             </span>
                             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                style={{ background: 'var(--glass-bg-3)', border: '1px solid var(--glass-border-1)' }}>
                                 <Icon className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                             </div>
                         </div>
@@ -105,7 +105,7 @@ export default function StatCards({ latestMetrics, metricsHistory }) {
                             {hasDelta && (
                                 <div className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-md"
                                     style={{
-                                        background: isNeutral ? 'rgba(255,255,255,0.05)' : (isGood ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)'),
+                                        background: isNeutral ? 'var(--glass-bg-4)' : (isGood ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)'),
                                     }}>
                                     {isNeutral ? (
                                         <Activity className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />

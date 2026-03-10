@@ -1,9 +1,11 @@
 import React from 'react';
-import { Bell, User, LogOut } from 'lucide-react';
+import { Bell, User, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../context/ThemeContext';
 
 export default function TopBar({ connected, status, activePage, alertCount = 0, onPageChange }) {
     const { isLoggedIn, logout } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const isRunning = status === 'running';
 
     const pageLabels = {
@@ -28,8 +30,8 @@ export default function TopBar({ connected, status, activePage, alertCount = 0, 
         <div className="w-full shrink-0 px-6 flex items-center justify-between relative z-10"
             style={{
                 height: '56px',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-                background: 'rgba(255,255,255,0.01)',
+                borderBottom: '1px solid var(--glass-border-1)',
+                background: 'var(--glass-bg-1)',
             }}>
             {/* Left: LIVE badge + breadcrumb */}
             <div className="flex items-center gap-5">
@@ -64,14 +66,32 @@ export default function TopBar({ connected, status, activePage, alertCount = 0, 
             {/* Right: icons */}
             <div className="flex items-center gap-2">
                 <button className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 relative"
+                    title="Toggle Theme"
                     style={{
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.06)',
+                        background: 'var(--glass-bg-3)',
+                        border: '1px solid var(--glass-border-1)',
+                        cursor: 'pointer',
+                    }}
+                    onClick={toggleTheme}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--glass-bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'var(--glass-bg-3)'}
+                >
+                    {theme === 'dark' ? (
+                        <Moon className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                    ) : (
+                        <Sun className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                    )}
+                </button>
+
+                <button className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 relative"
+                    style={{
+                        background: 'var(--glass-bg-3)',
+                        border: '1px solid var(--glass-border-1)',
                         cursor: 'pointer',
                     }}
                     onClick={() => onPageChange && onPageChange('alerts')}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--glass-bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'var(--glass-bg-3)'}
                 >
                     <Bell className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                     {alertCount > 0 && (
@@ -105,12 +125,12 @@ export default function TopBar({ connected, status, activePage, alertCount = 0, 
                         title="Logout"
                         onClick={logout}
                         style={{
-                            background: 'rgba(255,255,255,0.04)',
-                            border: '1px solid rgba(255,255,255,0.06)',
+                            background: 'var(--glass-bg-3)',
+                            border: '1px solid var(--glass-border-1)',
                             cursor: 'pointer',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--glass-bg-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'var(--glass-bg-3)'}
                     >
                         <User className="w-4 h-4 hover:hidden" style={{ color: 'var(--text-muted)' }} />
                         <LogOut className="w-4 h-4 hidden hover:block" style={{ color: 'var(--text-muted)' }} />

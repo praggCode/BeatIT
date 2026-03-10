@@ -106,8 +106,10 @@ export default function App() {
                                             <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Run Comparison</h2>
                                             <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Previous run vs latest run</p>
                                         </div>
-                                        <button className="text-[11px] px-3 py-1.5 rounded-xl"
-                                            style={{ color: 'var(--text-muted)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}
+                                        <button className="text-[11px] px-3 py-1.5 rounded-xl transition-all duration-200"
+                                            style={{ color: 'var(--text-muted)', background: 'var(--glass-bg-3)', border: '1px solid var(--glass-border-1)', cursor: 'pointer' }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--glass-bg-hover)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'var(--glass-bg-3)'}
                                             onClick={() => setShowComparison(false)}>
                                             <span className="flex items-center gap-1"><X className="w-3 h-3" /> Close</span>
                                         </button>
@@ -145,7 +147,7 @@ export default function App() {
                     {/* Progress bar */}
                     {isRunning && (
                         <div className="w-full h-[3px] shrink-0"
-                            style={{ background: 'rgba(255,255,255,0.03)' }}>
+                            style={{ background: 'var(--glass-bg-2)' }}>
                             <div className="h-full transition-all duration-300"
                                 style={{
                                     width: `${progressValue}%`,

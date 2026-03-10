@@ -15,8 +15,8 @@ export default function NavigationSidebar({ activePage, onPageChange, alertCount
         <div className="h-full shrink-0 flex flex-col relative z-10"
             style={{
                 width: '220px',
-                background: 'rgba(255,255,255,0.02)',
-                borderRight: '1px solid rgba(255,255,255,0.06)',
+                background: 'var(--glass-bg-1)',
+                borderRight: '1px solid var(--glass-border-1)',
             }}>
 
             {/* Brand */}
@@ -57,7 +57,7 @@ export default function NavigationSidebar({ activePage, onPageChange, alertCount
                                 border: 'none',
                             }}
                             onMouseEnter={(e) => {
-                                if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                                if (!isActive) e.currentTarget.style.background = 'var(--glass-bg-3)';
                             }}
                             onMouseLeave={(e) => {
                                 if (!isActive) e.currentTarget.style.background = 'transparent';
