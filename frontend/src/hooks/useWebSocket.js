@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '../lib/supabase';
 
 export function useWebSocket() {
     const [connected, setConnected] = useState(false);
@@ -122,7 +123,9 @@ export function useWebSocket() {
         if (config?.target) setLastTarget(config.target);
 
         try {
-            const token = localStorage.getItem('beatit_token');
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
             const response = await fetch(`${apiUrl}/api/test/start`, {
                 method: 'POST',

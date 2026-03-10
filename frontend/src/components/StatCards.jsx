@@ -66,8 +66,13 @@ export default function StatCards({ latestMetrics, metricsHistory }) {
                 const Icon = card.icon;
                 const hasDelta = card.delta !== null && card.delta !== undefined && !isNaN(card.delta);
                 let isGood = false;
+                let isNeutral = false;
                 if (hasDelta) {
-                    isGood = card.invertDelta ? card.delta < 0 : card.delta > 0;
+                    if (Math.abs(card.delta) < 0.05) {
+                        isNeutral = true;
+                    } else {
+                        isGood = card.invertDelta ? card.delta < 0 : card.delta > 0;
+                    }
                 }
                 const deltaAbs = hasDelta ? Math.abs(card.delta).toFixed(1) : null;
 
@@ -100,16 +105,18 @@ export default function StatCards({ latestMetrics, metricsHistory }) {
                             {hasDelta && (
                                 <div className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-md"
                                     style={{
-                                        background: isGood ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)',
+                                        background: isNeutral ? 'rgba(255,255,255,0.05)' : (isGood ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)'),
                                     }}>
-                                    {isGood ? (
+                                    {isNeutral ? (
+                                        <Activity className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />
+                                    ) : isGood ? (
                                         <TrendingDown className="w-3 h-3" style={{ color: 'var(--success)' }} />
                                     ) : (
                                         <TrendingUp className="w-3 h-3" style={{ color: 'var(--error)' }} />
                                     )}
                                     <span className="text-[11px] font-bold"
-                                        style={{ color: isGood ? 'var(--success)' : 'var(--error)' }}>
-                                        {isGood ? '↓' : '↑'}{deltaAbs}%
+                                        style={{ color: isNeutral ? 'var(--text-muted)' : (isGood ? 'var(--success)' : 'var(--error)') }}>
+                                        {isNeutral ? '' : (card.delta > 0 ? '+' : '-')}{deltaAbs}%
                                     </span>
                                 </div>
                             )}
